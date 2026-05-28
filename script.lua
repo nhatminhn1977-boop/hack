@@ -12,44 +12,61 @@ frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 local inputBox = Instance.new("TextBox", frame)
 inputBox.Size = UDim2.new(0.8, 0, 0, 40)
 inputBox.Position = UDim2.new(0.1, 0, 0.2, 0)
-inputBox.PlaceholderText = "Dán Webhook URL vào đây..."
-inputBox.Text = ""
+inputBox.PlaceholderText = "Dán Webhook URL..."
 
 local btn = Instance.new("TextButton", frame)
 btn.Size = UDim2.new(0.8, 0, 0, 40)
 btn.Position = UDim2.new(0.1, 0, 0.6, 0)
-btn.Text = "Bắt đầu treo"
+btn.Text = "Bắt đầu Treo (Nhảy Anti-AFK)"
 btn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
 
--- 2. Logic xử lý sau khi nhấn nút
+-- 2. Logic chính
 btn.MouseButton1Click:Connect(function()
     local url = inputBox.Text
-    if url ~= "" then
-        frame:Destroy() -- Xóa UI sau khi nhập xong
-        
-        -- Bắt đầu vòng lặp gửi Webhook
-        task.spawn(function()
-            local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
-            
-            while true do
-                local data = {
-                    ["embeds"] = {{
-                        ["title"] = "Trạng thái treo game",
-                        ["description"] = "Đang chơi: **" .. gameName .. "**",
-                        ["color"] = 3447003,
-                        ["footer"] = {["text"] = "Treo game 24/7"}
-                    }}
-                }
+    if url == "" then return end
+    frame:Destroy()
 
-                request({
-                    Url = url,
-                    Method = "POST",
-                    Headers = {["Content-Type"] = "application/json"},
-                    Body = HttpService:JSONEncode(data)
-                })
-                
-                task.wait(20) -- Gửi mỗi 20 giây
+    local startTime = os.time()
+    local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+
+    -- Anti-AFK bằng cách Nhảy (Jump)
+    task.spawn(function()
+        while true do
+            local character = player.Character
+            if character and character:FindFirstChild("Humanoid") then
+                character.Humanoid.Jump = true -- Lệnh nhảy
             end
-        end)
-    end
+            task.wait(20) -- Nhảy mỗi 5 phút một lần là đủ để không bị AFK
+        end
+    end)
+
+    -- Vòng lặp gửi Webhook mỗi 10 giây
+    task.spawn(function()
+        while true do
+            local uptime = os.difftime(os.time(), startTime)
+            local hours = math.floor(uptime / 3600)
+            local minutes = math.floor((uptime % 3600) / 60)
+            local seconds = uptime % 60
+
+            local data = {
+                ["embeds"] = {{
+                    ["title"] = "Trạng thái treo game",
+                    ["fields"] = {
+                        {["name"] = "Game:", ["value"] = gameName, ["inline"] = false},
+                        {["name"] = "Thời gian treo:", ["value"] = string.format("%02d:%02d:%02d", hours, minutes, seconds), ["inline"] = true}
+                    },
+                    ["color"] = 0x00FF00
+                }}
+            }
+
+            request({
+                Url = url,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = HttpService:JSONEncode(data)
+            })
+            
+            task.wait(10)
+        end
+    end)
 end)
