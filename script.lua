@@ -29,14 +29,17 @@ btn.MouseButton1Click:Connect(function()
     local startTime = os.time()
     local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
 
-    -- Anti-AFK bằng cách Nhảy (Jump)
+    -- Anti-AFK cải tiến (Thay thế đoạn cũ)
     task.spawn(function()
         while true do
             local character = player.Character
             if character and character:FindFirstChild("Humanoid") then
-                character.Humanoid.Jump = true -- Lệnh nhảy
+                character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                print("Đã thực hiện lệnh nhảy!") -- Kiểm tra trong Console
+            else
+                print("Không tìm thấy nhân vật!")
             end
-            task.wait(20) -- Nhảy mỗi 5 phút một lần là đủ để không bị AFK
+            task.wait(60)
         end
     end)
 
