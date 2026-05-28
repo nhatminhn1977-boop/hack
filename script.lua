@@ -1,58 +1,47 @@
 local Players = game:GetService("Players")
+local MarketplaceService = game:GetService("MarketplaceService")
 local player = Players.LocalPlayer
-local mouse = player:GetMouse()
 
--- 1. Tạo GUI
+-- 1. Tạo UI
 local screenGui = Instance.new("ScreenGui", player.PlayerGui)
 local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 250, 0, 200)
-frame.Position = UDim2.new(0.5, -125, 0.5, -100)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.Size = UDim2.new(0, 250, 0, 120)
+frame.Position = UDim2.new(0.5, -125, 0.5, -60)
+frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 
 local inputBox = Instance.new("TextBox", frame)
 inputBox.Size = UDim2.new(0.8, 0, 0, 40)
 inputBox.Position = UDim2.new(0.1, 0, 0.2, 0)
-inputBox.PlaceholderText = "Nhập ID vật phẩm..."
+inputBox.PlaceholderText = "Nhập Asset ID (Số)..."
+inputBox.Parent = frame
 
-local spawnBtn = Instance.new("TextButton", frame)
-spawnBtn.Size = UDim2.new(0.8, 0, 0, 40)
-spawnBtn.Position = UDim2.new(0.1, 0, 0.6, 0)
-spawnBtn.Text = "Spawn Item"
-spawnBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+local equipBtn = Instance.new("TextButton", frame)
+equipBtn.Size = UDim2.new(0.8, 0, 0, 40)
+equipBtn.Position = UDim2.new(0.1, 0, 0.6, 0)
+equipBtn.Text = "Mặc bằng ID"
+equipBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+equipBtn.Parent = frame
 
--- 2. Logic Kéo thả (Draggable)
-local dragging, dragInput, dragStart, startPos
-frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = frame.Position
-    end
-end)
+-- 2. Logic mặc đồ bằng ID
+equipBtn.MouseButton1Click:Connect(function()
+    local id = tonumber(inputBox.Text)
+    if not id then return end
 
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
+    -- Load phụ kiện từ Roblox thông qua ID
+    local success, asset = pcall(function()
+        return MarketplaceService:LoadAsset(id)
+    end)
 
-game:GetService("UserInputService").InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
--- 3. Logic Spawn Item
-spawnBtn.MouseButton1Click:Connect(function()
-    local itemId = tonumber(inputBox.Text)
-    if itemId then
-        -- Lưu ý: Việc spawn item thường yêu cầu gọi RemoteEvent của game
-        -- Mỗi game có một "tên" RemoteEvent khác nhau (ví dụ: game.ReplicatedStorage.SpawnItem)
-        print("Đang cố gắng spawn vật phẩm ID: " .. itemId)
-        
-        -- Mẫu ví dụ: game.ReplicatedStorage.RemoteEvent:FireServer("Spawn", itemId)
+    if success and asset then
+        local accessory = asset:FindFirstChildOfClass("Accessory")
+        if accessory then
+            accessory.Parent = player.Character
+            print("Đã mặc phụ kiện ID: " .. id)
+        else
+            warn("ID này không phải là một Accessory hợp lệ!")
+        end
+        asset:Destroy() -- Xóa model tạm sau khi lấy xong accessory
     else
-        warn("Vui lòng nhập ID hợp lệ!")
+        warn("Không thể tải ID này: " .. tostring(asset))
     end
 end)
