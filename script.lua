@@ -53,8 +53,9 @@ espBtn.MouseButton1Click:Connect(function()
     espBtn.Text = espEnabled and "ESP: ON" or "ESP: OFF"
 end)
 
--- --- 2. Logic ESP (Highlight & NameTag) ---
+-- --- 2. Logic ESP & Lock Camera ---
 RunService.RenderStepped:Connect(function()
+    -- ESP Logic
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
             local head = p.Character.Head
@@ -78,20 +79,21 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- --- 3. Logic Lock Camera Skill ---
+    -- Camera Lock Logic
     if isLocking and targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPlayer.Character.Head.Position)
     end
 end)
 
--- --- 4. Lắng nghe Skill Keys ---
+-- --- 3. Lắng nghe Skill Keys (1, 2, 3, 4, R, Q) ---
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed or not targetPlayer then return end
-    local keys = {Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four, Enum.KeyCode.R,Enum.KeyCode.Q}
+    -- Thêm Enum.KeyCode.Q vào danh sách
+    local keys = {Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four, Enum.KeyCode.R, Enum.KeyCode.Q}
     for _, key in pairs(keys) do
         if input.KeyCode == key then
             isLocking = true
-            task.wait(0.01)
+            task.wait(0.01) -- Thời gian lock cực ngắn
             isLocking = false
             break
         end
