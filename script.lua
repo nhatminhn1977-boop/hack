@@ -87,7 +87,7 @@ end)
 -- --- 4. Lắng nghe Skill Keys ---
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed or not targetPlayer then return end
-    local keys = {Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four, Enum.KeyCode.R}
+    local keys = {Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four, Enum.KeyCode.R,Enum.KeyCode.Q}
     for _, key in pairs(keys) do
         if input.KeyCode == key then
             isLocking = true
