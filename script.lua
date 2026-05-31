@@ -1,15 +1,18 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
 local player = Players.LocalPlayer
 
-local aimbotEnabled = false
 local targetPlayer = nil
+local isLocking = false
+local espEnabled = false
 local isCollapsed = false
 
--- --- UI Setup ---
+-- --- 1. Tạo UI ---
 local screenGui = Instance.new("ScreenGui", player.PlayerGui)
 local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 220, 0, 450)
+frame.Size = UDim2.new(0, 220, 0, 300)
 frame.Position = UDim2.new(0.1, 0, 0.1, 0)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.Active = true
@@ -21,88 +24,76 @@ collapseBtn.Position = UDim2.new(0.85, 0, 0, 0)
 collapseBtn.Text = "-"
 collapseBtn.MouseButton1Click:Connect(function()
     isCollapsed = not isCollapsed
-    frame.Size = isCollapsed and UDim2.new(0, 220, 0, 40) or UDim2.new(0, 220, 0, 450)
-    for _, child in pairs(frame:GetChildren()) do
-        if child ~= collapseBtn then child.Visible = not isCollapsed end
-    end
+    frame.Size = isCollapsed and UDim2.new(0, 220, 0, 40) or UDim2.new(0, 220, 0, 300)
+    for _, child in pairs(frame:GetChildren()) do if child ~= collapseBtn then child.Visible = not isCollapsed end end
 end)
 
-local listContainer = Instance.new("ScrollingFrame", frame)
-listContainer.Size = UDim2.new(1, 0, 0.7, 0)
-listContainer.Position = UDim2.new(0, 0, 0.1, 0)
-listContainer.BackgroundTransparency = 1
-listContainer.CanvasSize = UDim2.new(0, 0, 5, 0)
-
-local closestBtn = Instance.new("TextButton", frame)
-closestBtn.Size = UDim2.new(0.9, 0, 0, 40)
-closestBtn.Position = UDim2.new(0.05, 0, 0.82, 0)
-closestBtn.Text = "CHỌN AIM  LÀ GẦN NHẤT"
-
-local toggleBtn = Instance.new("TextButton", frame)
-toggleBtn.Size = UDim2.new(0.9, 0, 0, 40)
-toggleBtn.Position = UDim2.new(0.05, 0, 0.91, 0)
-toggleBtn.Text = "Aimbot: OFF"
-
--- --- Chức năng ---
-local function updatePlayerList()
-    for _, child in pairs(listContainer:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
-    local yPos = 0
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= player then
-            local btn = Instance.new("TextButton", listContainer)
-            btn.Size = UDim2.new(1, -10, 0, 50)
-            btn.Position = UDim2.new(0, 5, 0, yPos)
-            btn.Text = "      " .. p.Name
-            btn.TextXAlignment = Enum.TextXAlignment.Left
-            btn.BackgroundColor3 = (targetPlayer == p) and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(50, 50, 50)
-            
-            -- Avatar
-            local avatar = Instance.new("ImageLabel", btn)
-            avatar.Size = UDim2.new(0, 40, 0, 40)
-            avatar.Position = UDim2.new(0, 5, 0, 5)
-            avatar.BackgroundTransparency = 1
-            pcall(function() avatar.Image = Players:GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48) end)
-            
-            btn.MouseButton1Click:Connect(function()
-                targetPlayer = p
-                updatePlayerList()
-            end)
-            yPos += 55
-        end
-    end
-end
-
-closestBtn.MouseButton1Click:Connect(function()
+local aimBtn = Instance.new("TextButton", frame)
+aimBtn.Size = UDim2.new(0.9, 0, 0, 40)
+aimBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
+aimBtn.Text = "Chọn Aim Gần Nhất"
+aimBtn.MouseButton1Click:Connect(function()
     local closest, min = nil, math.huge
     for _, p in pairs(Players:GetPlayers()) do
-        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            local dist = (p.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+        if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
+            local dist = (p.Character.Head.Position - player.Character.Head.Position).Magnitude
             if dist < min then min = dist; closest = p end
         end
     end
     targetPlayer = closest
-    updatePlayerList()
+    aimBtn.Text = targetPlayer and ("Target: " .. targetPlayer.Name) or "Không tìm thấy"
 end)
 
-toggleBtn.MouseButton1Click:Connect(function()
-    aimbotEnabled = not aimbotEnabled
-    toggleBtn.Text = aimbotEnabled and "Aimbot: ON" or "Aimbot: OFF"
+local espBtn = Instance.new("TextButton", frame)
+espBtn.Size = UDim2.new(0.9, 0, 0, 40)
+espBtn.Position = UDim2.new(0.05, 0, 0.5, 0)
+espBtn.Text = "ESP: OFF"
+espBtn.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    espBtn.Text = espEnabled and "ESP: ON" or "ESP: OFF"
 end)
 
-Players.PlayerAdded:Connect(updatePlayerList)
-Players.PlayerRemoving:Connect(updatePlayerList)
-updatePlayerList()
-
+-- --- 2. Logic ESP (Highlight & NameTag) ---
 RunService.RenderStepped:Connect(function()
-    if aimbotEnabled and targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local myRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        if myRoot then
-            local hum = player.Character:FindFirstChild("Humanoid")
-            if hum then hum.AutoRotate = false end
-            local targetPos = Vector3.new(targetPlayer.Character.HumanoidRootPart.Position.X, myRoot.Position.Y, targetPlayer.Character.HumanoidRootPart.Position.Z)
-            myRoot.CFrame = CFrame.lookAt(myRoot.Position, targetPos)
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
+            local head = p.Character.Head
+            local hl = p.Character:FindFirstChild("ESP_H") or Instance.new("Highlight", p.Character)
+            hl.Name = "ESP_H"
+            
+            local tag = head:FindFirstChild("ESP_T") or Instance.new("BillboardGui", head)
+            tag.Name = "ESP_T"
+            tag.Size = UDim2.new(0, 100, 0, 50)
+            tag.AlwaysOnTop = true
+            tag.Enabled = espEnabled
+            
+            if not tag:FindFirstChild("Label") then
+                local l = Instance.new("TextLabel", tag)
+                l.Name = "Label"; l.Size = UDim2.new(1,0,1,0); l.BackgroundTransparency = 1
+                l.TextColor3 = Color3.new(1,1,0)
+            end
+            
+            hl.Enabled = espEnabled
+            tag.Label.Text = p.Name
         end
-    elseif player.Character and player.Character:FindFirstChild("Humanoid") then
-        player.Character.Humanoid.AutoRotate = true
+    end
+
+    -- --- 3. Logic Lock Camera Skill ---
+    if isLocking and targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
+        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPlayer.Character.Head.Position)
+    end
+end)
+
+-- --- 4. Lắng nghe Skill Keys ---
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed or not targetPlayer then return end
+    local keys = {Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four, Enum.KeyCode.R}
+    for _, key in pairs(keys) do
+        if input.KeyCode == key then
+            isLocking = true
+            task.wait(0.5)
+            isLocking = false
+            break
+        end
     end
 end)
