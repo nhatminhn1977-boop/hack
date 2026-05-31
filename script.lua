@@ -91,7 +91,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     for _, key in pairs(keys) do
         if input.KeyCode == key then
             isLocking = true
-            task.wait(0.5)
+            task.wait(0.1)
             isLocking = false
             break
         end
