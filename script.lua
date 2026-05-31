@@ -3,14 +3,13 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 local aimbotEnabled = false
-local espEnabled = false
 local targetPlayer = nil
 local isCollapsed = false
 
--- UI Setup
+-- --- UI Setup ---
 local screenGui = Instance.new("ScreenGui", player.PlayerGui)
 local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 200, 0, 400)
+frame.Size = UDim2.new(0, 220, 0, 450)
 frame.Position = UDim2.new(0.1, 0, 0.1, 0)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.Active = true
@@ -22,47 +21,55 @@ collapseBtn.Position = UDim2.new(0.85, 0, 0, 0)
 collapseBtn.Text = "-"
 collapseBtn.MouseButton1Click:Connect(function()
     isCollapsed = not isCollapsed
-    frame.Size = isCollapsed and UDim2.new(0, 200, 0, 100) or UDim2.new(0, 200, 0, 400)
-    frame:FindFirstChild("ListContainer").Visible = not isCollapsed
+    frame.Size = isCollapsed and UDim2.new(0, 220, 0, 40) or UDim2.new(0, 220, 0, 450)
+    for _, child in pairs(frame:GetChildren()) do
+        if child ~= collapseBtn then child.Visible = not isCollapsed end
+    end
 end)
 
-local listContainer = Instance.new("Frame", frame)
-listContainer.Name = "ListContainer"
-listContainer.Size = UDim2.new(1, 0, 0.6, 0)
+local listContainer = Instance.new("ScrollingFrame", frame)
+listContainer.Size = UDim2.new(1, 0, 0.7, 0)
 listContainer.Position = UDim2.new(0, 0, 0.1, 0)
 listContainer.BackgroundTransparency = 1
-
-local listFrame = Instance.new("ScrollingFrame", listContainer)
-listFrame.Size = UDim2.new(1, 0, 1, 0)
-listFrame.BackgroundTransparency = 1
+listContainer.CanvasSize = UDim2.new(0, 0, 5, 0)
 
 local closestBtn = Instance.new("TextButton", frame)
-closestBtn.Size = UDim2.new(0.9, 0, 0, 30)
-closestBtn.Position = UDim2.new(0.05, 0, 0.72, 0)
-closestBtn.Text = "Aim gần nhất"
+closestBtn.Size = UDim2.new(0.9, 0, 0, 40)
+closestBtn.Position = UDim2.new(0.05, 0, 0.82, 0)
+closestBtn.Text = "AIM GẦN NHẤT"
 
--- --- Logic Chính ---
+local toggleBtn = Instance.new("TextButton", frame)
+toggleBtn.Size = UDim2.new(0.9, 0, 0, 40)
+toggleBtn.Position = UDim2.new(0.05, 0, 0.91, 0)
+toggleBtn.Text = "Aimbot: OFF"
+
+-- --- Chức năng ---
 local function updatePlayerList()
-    for _, child in pairs(listFrame:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
+    for _, child in pairs(listContainer:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
     local yPos = 0
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= player then
-            local btn = Instance.new("TextButton", listFrame)
-            btn.Size = UDim2.new(1, -10, 0, 40)
+            local btn = Instance.new("TextButton", listContainer)
+            btn.Size = UDim2.new(1, -10, 0, 50)
             btn.Position = UDim2.new(0, 5, 0, yPos)
-            btn.Text = "  " .. p.Name
+            btn.Text = "      " .. p.Name
             btn.TextXAlignment = Enum.TextXAlignment.Left
-            btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            btn.BackgroundColor3 = (targetPlayer == p) and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(50, 50, 50)
+            
+            -- Avatar
+            local avatar = Instance.new("ImageLabel", btn)
+            avatar.Size = UDim2.new(0, 40, 0, 40)
+            avatar.Position = UDim2.new(0, 5, 0, 5)
+            avatar.BackgroundTransparency = 1
+            pcall(function() avatar.Image = Players:GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48) end)
             
             btn.MouseButton1Click:Connect(function()
-                targetPlayer = p -- Chỉ chọn 1 người
-                for _, other in pairs(listFrame:GetChildren()) do if other:IsA("TextButton") then other.BackgroundColor3 = Color3.fromRGB(50, 50, 50) end end
-                btn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+                targetPlayer = p
+                updatePlayerList()
             end)
-            yPos += 45
+            yPos += 55
         end
     end
-    listFrame.CanvasSize = UDim2.new(0, 0, 0, yPos)
 end
 
 closestBtn.MouseButton1Click:Connect(function()
@@ -74,10 +81,18 @@ closestBtn.MouseButton1Click:Connect(function()
         end
     end
     targetPlayer = closest
-    updatePlayerList() -- Refresh UI để hiển thị người đang được aim
+    updatePlayerList()
 end)
 
--- Render Loop
+toggleBtn.MouseButton1Click:Connect(function()
+    aimbotEnabled = not aimbotEnabled
+    toggleBtn.Text = aimbotEnabled and "Aimbot: ON" or "Aimbot: OFF"
+end)
+
+Players.PlayerAdded:Connect(updatePlayerList)
+Players.PlayerRemoving:Connect(updatePlayerList)
+updatePlayerList()
+
 RunService.RenderStepped:Connect(function()
     if aimbotEnabled and targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
         local myRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
@@ -87,7 +102,7 @@ RunService.RenderStepped:Connect(function()
             local targetPos = Vector3.new(targetPlayer.Character.HumanoidRootPart.Position.X, myRoot.Position.Y, targetPlayer.Character.HumanoidRootPart.Position.Z)
             myRoot.CFrame = CFrame.lookAt(myRoot.Position, targetPos)
         end
+    elseif player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.AutoRotate = true
     end
 end)
-
--- (Giữ nguyên phần toggle aimbot, esp và cập nhật playerlist từ code cũ vào đây)
