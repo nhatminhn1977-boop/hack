@@ -53,10 +53,18 @@ local function getClosestPlayer()
 end
 
 RunService.RenderStepped:Connect(function()
-    if aimbotEnabled then -- Chỉ chạy khi bật
+    if aimbotEnabled then
         local target = getClosestPlayer()
         if target and target.Character and target.Character:FindFirstChild("Head") then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position)
+            local targetPos = target.Character.Head.Position
+            local camPos = Camera.CFrame.Position
+            
+            -- Chỉ lấy tọa độ X và Z của mục tiêu
+            -- Ép tọa độ Y (cao độ) của mục tiêu bằng với camPos.Y (camera của bạn)
+            local lookAtPos = Vector3.new(targetPos.X, camPos.Y, targetPos.Z)
+            
+            -- Bây giờ camera chỉ xoay ngang
+            Camera.CFrame = CFrame.new(camPos, lookAtPos)
         end
     end
 end)
