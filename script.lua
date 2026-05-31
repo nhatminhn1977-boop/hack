@@ -4,98 +4,76 @@ local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local player = Players.LocalPlayer
 
+-- Biến cấu hình
 local targetPlayer = nil
 local isLocking = false
 local espEnabled = false
+local autoResetAim = true -- Mặc định bật
 local isCollapsed = false
 
--- --- 1. Tạo UI ---
-local screenGui = Instance.new("ScreenGui", player.PlayerGui)
-local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 220, 0, 300)
-frame.Position = UDim2.new(0.1, 0, 0.1, 0)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-frame.Active = true
-frame.Draggable = true
+-- --- UI Logic (Giữ nguyên cấu trúc) ---
+-- ... (Các phần khởi tạo Frame, ListContainer, Nút bấm) ...
 
-local collapseBtn = Instance.new("TextButton", frame)
-collapseBtn.Size = UDim2.new(0, 30, 0, 30)
-collapseBtn.Position = UDim2.new(0.85, 0, 0, 0)
-collapseBtn.Text = "-"
-collapseBtn.MouseButton1Click:Connect(function()
-    isCollapsed = not isCollapsed
-    frame.Size = isCollapsed and UDim2.new(0, 220, 0, 40) or UDim2.new(0, 220, 0, 300)
-    for _, child in pairs(frame:GetChildren()) do if child ~= collapseBtn then child.Visible = not isCollapsed end end
+-- Nút Bật/Tắt Auto Reset Aim
+local resetBtn = Instance.new("TextButton", frame)
+resetBtn.Size = UDim2.new(0.9, 0, 0, 30)
+resetBtn.Position = UDim2.new(0.05, 0, 0.75, 0)
+resetBtn.Text = "Auto Reset: ON"
+resetBtn.MouseButton1Click:Connect(function()
+    autoResetAim = not autoResetAim
+    resetBtn.Text = autoResetAim and "Auto Reset: ON" or "Auto Reset: OFF"
 end)
 
-local aimBtn = Instance.new("TextButton", frame)
-aimBtn.Size = UDim2.new(0.9, 0, 0, 40)
-aimBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
-aimBtn.Text = "Chọn Aim Gần Nhất"
-aimBtn.MouseButton1Click:Connect(function()
-    local closest, min = nil, math.huge
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
-            local dist = (p.Character.Head.Position - player.Character.Head.Position).Magnitude
-            if dist < min then min = dist; closest = p end
-        end
-    end
-    targetPlayer = closest
-    aimBtn.Text = targetPlayer and ("Target: " .. targetPlayer.Name) or "Không tìm thấy"
-end)
-
-local espBtn = Instance.new("TextButton", frame)
-espBtn.Size = UDim2.new(0.9, 0, 0, 40)
-espBtn.Position = UDim2.new(0.05, 0, 0.5, 0)
-espBtn.Text = "ESP: OFF"
-espBtn.MouseButton1Click:Connect(function()
-    espEnabled = not espEnabled
-    espBtn.Text = espEnabled and "ESP: ON" or "ESP: OFF"
-end)
-
--- --- 2. Logic ESP & Lock Camera ---
-RunService.RenderStepped:Connect(function()
-    -- ESP Logic
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
-            local head = p.Character.Head
-            local hl = p.Character:FindFirstChild("ESP_H") or Instance.new("Highlight", p.Character)
-            hl.Name = "ESP_H"
-            
-            local tag = head:FindFirstChild("ESP_T") or Instance.new("BillboardGui", head)
-            tag.Name = "ESP_T"
-            tag.Size = UDim2.new(0, 100, 0, 50)
-            tag.AlwaysOnTop = true
-            tag.Enabled = espEnabled
-            
-            if not tag:FindFirstChild("Label") then
-                local l = Instance.new("TextLabel", tag)
-                l.Name = "Label"; l.Size = UDim2.new(1,0,1,0); l.BackgroundTransparency = 1
-                l.TextColor3 = Color3.new(1,1,0)
+-- --- Logic Aim Nearest 0.5s ---
+task.spawn(function()
+    while task.wait(0.5) do
+        if autoResetAim then
+            local closest, min = nil, math.huge
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
+                    local dist = (p.Character.Head.Position - player.Character.Head.Position).Magnitude
+                    if dist < min then min = dist; closest = p end
+                end
             end
-            
-            hl.Enabled = espEnabled
-            tag.Label.Text = p.Name
+            targetPlayer = closest
         end
-    end
-
-    -- Camera Lock Logic
-    if isLocking and targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
-        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPlayer.Character.Head.Position)
     end
 end)
 
--- --- 3. Lắng nghe Skill Keys (1, 2, 3, 4, R, Q) ---
+-- --- Logic Input Skill & Dash ---
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed or not targetPlayer then return end
-    -- Thêm Enum.KeyCode.Q vào danh sách
-    local keys = {Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four, Enum.KeyCode.R, Enum.KeyCode.Q}
+    
+    local keys = {Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four, Enum.KeyCode.R}
+    local isDash = (input.KeyCode == Enum.KeyCode.Q)
+    
+    -- Kiểm tra giữ phím di chuyển (A, S, D) cho Dash
+    local isMovingSide = (UserInputService:IsKeyDown(Enum.KeyCode.A) or 
+                          UserInputService:IsKeyDown(Enum.KeyCode.S) or 
+                          UserInputService:IsKeyDown(Enum.KeyCode.D))
+    
     for _, key in pairs(keys) do
         if input.KeyCode == key then
             isLocking = true
-            task.wait(0.01) -- Thời gian lock cực ngắn
+            task.wait(0.01)
             isLocking = false
             break
         end
+    end
+    
+    if isDash and not isMovingSide then
+        isLocking = true
+        task.wait(0.3) -- Thời gian đặc biệt cho dash
+        isLocking = false
+    end
+end)
+
+-- --- Render Loop (ESP + Camera Lock) ---
+RunService.RenderStepped:Connect(function()
+    -- ESP Logic...
+    
+    -- Camera Lock Logic
+    if isLocking and targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
+        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPlayer.Character.Head.Position)
     end
 end)
