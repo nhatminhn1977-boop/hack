@@ -36,7 +36,7 @@ listContainer.CanvasSize = UDim2.new(0, 0, 5, 0)
 local closestBtn = Instance.new("TextButton", frame)
 closestBtn.Size = UDim2.new(0.9, 0, 0, 40)
 closestBtn.Position = UDim2.new(0.05, 0, 0.82, 0)
-closestBtn.Text = "AIM GẦN NHẤT"
+closestBtn.Text = "CHỌN AIM  LÀ GẦN NHẤT"
 
 local toggleBtn = Instance.new("TextButton", frame)
 toggleBtn.Size = UDim2.new(0.9, 0, 0, 40)
