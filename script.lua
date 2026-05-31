@@ -55,16 +55,17 @@ end
 RunService.RenderStepped:Connect(function()
     if aimbotEnabled then
         local target = getClosestPlayer()
-        if target and target.Character and target.Character:FindFirstChild("Head") then
-            local targetPos = target.Character.Head.Position
-            local camPos = Camera.CFrame.Position
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            local myRoot = player.Character:FindFirstChild("HumanoidRootPart")
+            local targetRoot = target.Character.HumanoidRootPart
             
-            -- Chỉ lấy tọa độ X và Z của mục tiêu
-            -- Ép tọa độ Y (cao độ) của mục tiêu bằng với camPos.Y (camera của bạn)
-            local lookAtPos = Vector3.new(targetPos.X, camPos.Y, targetPos.Z)
-            
-            -- Bây giờ camera chỉ xoay ngang
-            Camera.CFrame = CFrame.new(camPos, lookAtPos)
+            if myRoot then
+                -- Tính toán vị trí mục tiêu nhưng giữ nguyên độ cao (Y) của nhân vật mình
+                local targetPos = Vector3.new(targetRoot.Position.X, myRoot.Position.Y, targetRoot.Position.Z)
+                
+                -- Xoay nhân vật hướng về phía đó
+                myRoot.CFrame = CFrame.lookAt(myRoot.Position, targetPos)
+            end
         end
     end
 end)
