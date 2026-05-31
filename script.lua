@@ -4,99 +4,73 @@ local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local player = Players.LocalPlayer
 
+-- Cấu hình Setting
+local settings = {
+    AimDash = true,
+    Aim1 = true, Aim2 = true, Aim3 = true, Aim4 = true, AimR = true,
+    espEnabled = false
+}
+
 local targetPlayer = nil
 local isLocking = false
-local espEnabled = false
-local autoResetAim = true
 
--- --- 1. Sửa lỗi tạo UI (Đảm bảo hiển thị) ---
-local screenGui = Instance.new("ScreenGui", player.PlayerGui)
-screenGui.Name = "CombatMenu"
-screenGui.ResetOnSpawn = false -- Giữ UI khi chết
+-- --- 1. UI Setup (Thiết kế bo góc hiện đại) ---
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+local frame = Instance.new("Frame", gui); frame.Size = UDim2.new(0, 250, 0, 350); frame.Position = UDim2.new(0.05, 0, 0.3, 0); frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20); frame.Active = true; frame.Draggable = true
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 
-local frame = Instance.new("Frame", screenGui)
-frame.Name = "MainFrame"
-frame.Size = UDim2.new(0, 220, 0, 450)
-frame.Position = UDim2.new(0.1, 0, 0.1, 0)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-frame.Active = true
-frame.Draggable = true
-frame.Visible = true -- Đảm bảo hiển thị
+-- Header
+local title = Instance.new("TextLabel", frame); title.Size = UDim2.new(1, 0, 0, 40); title.Text = "COMBAT ASSIST"; title.TextColor3 = Color3.new(1, 1, 1); title.BackgroundTransparency = 1; title.Font = Enum.Font.Bold
 
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1, 0, 0, 30)
-title.Text = "MENU HỖ TRỢ"
-title.TextColor3 = Color3.new(1, 1, 1)
-title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+-- Target Info (Avatar + Name)
+local targetFrame = Instance.new("Frame", frame); targetFrame.Size = UDim2.new(0.9, 0, 0, 60); targetFrame.Position = UDim2.new(0.05, 0, 0.15, 0); targetFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Instance.new("UICorner", targetFrame)
+local avatar = Instance.new("ImageLabel", targetFrame); avatar.Size = UDim2.new(0, 50, 0, 50); avatar.Position = UDim2.new(0, 5, 0, 5); avatar.BackgroundTransparency = 1
+local nameLabel = Instance.new("TextLabel", targetFrame); nameLabel.Size = UDim2.new(0, 150, 0, 50); nameLabel.Position = UDim2.new(0, 60, 0, 0); nameLabel.Text = "No Target"; nameLabel.TextColor3 = Color3.new(1, 1, 1); nameLabel.BackgroundTransparency = 1
 
-local listFrame = Instance.new("ScrollingFrame", frame)
-listFrame.Size = UDim2.new(1, 0, 0.6, 0)
-listFrame.Position = UDim2.new(0, 0, 0.1, 0)
-listFrame.BackgroundTransparency = 1
-listFrame.CanvasSize = UDim2.new(0, 0, 2, 0)
-
--- --- 2. Hàm update danh sách ---
-local function updateList()
-    for _, child in pairs(listFrame:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
-    local y = 0
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= player then
-            local btn = Instance.new("TextButton", listFrame)
-            btn.Size = UDim2.new(1, -10, 0, 40); btn.Position = UDim2.new(0, 5, 0, y)
-            btn.Text = "  " .. p.Name; btn.TextXAlignment = Enum.TextXAlignment.Left
-            btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            
-            -- Avatar
-            local img = Instance.new("ImageLabel", btn)
-            img.Size = UDim2.new(0, 30, 0, 30); img.Position = UDim2.new(0, 160, 0, 5)
-            pcall(function() img.Image = Players:GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48) end)
-            
-            btn.MouseButton1Click:Connect(function() targetPlayer = p end)
-            y += 45
-        end
-    end
-    listFrame.CanvasSize = UDim2.new(0, 0, 0, y)
+-- Setting Buttons (Hàm tạo nút)
+local function createToggle(text, settingKey, yPos)
+    local btn = Instance.new("TextButton", frame); btn.Size = UDim2.new(0.9, 0, 0, 30); btn.Position = UDim2.new(0.05, 0, 0, yPos); btn.Text = text .. ": ON"; btn.BackgroundColor3 = Color3.fromRGB(60, 180, 60)
+    Instance.new("UICorner", btn)
+    btn.MouseButton1Click:Connect(function()
+        settings[settingKey] = not settings[settingKey]
+        btn.Text = text .. (settings[settingKey] and ": ON" or ": OFF")
+        btn.BackgroundColor3 = settings[settingKey] and Color3.fromRGB(60, 180, 60) or Color3.fromRGB(180, 60, 60)
+    end)
 end
 
--- --- 3. Nút chức năng ---
-local resetBtn = Instance.new("TextButton", frame)
-resetBtn.Size = UDim2.new(0.9, 0, 0, 30); resetBtn.Position = UDim2.new(0.05, 0, 0.75, 0)
-resetBtn.Text = "Auto Reset: ON"
-resetBtn.MouseButton1Click:Connect(function() autoResetAim = not autoResetAim; resetBtn.Text = autoResetAim and "Auto Reset: ON" or "Auto Reset: OFF" end)
+createToggle("Aim Dash (Q)", "AimDash", 150); createToggle("Aim Skills (1-4, R)", "Aim1", 190); createToggle("ESP", "espEnabled", 230)
 
-local espBtn = Instance.new("TextButton", frame)
-espBtn.Size = UDim2.new(0.9, 0, 0, 30); espBtn.Position = UDim2.new(0.05, 0, 0.85, 0)
-espBtn.Text = "ESP: OFF"
-espBtn.MouseButton1Click:Connect(function() espEnabled = not espEnabled; espBtn.Text = espEnabled and "ESP: ON" or "ESP: OFF" end)
-
--- --- 4. Chạy Logic ---
-updateList()
-Players.PlayerAdded:Connect(updateList)
-Players.PlayerRemoving:Connect(updateList)
-
+-- --- 2. Logic ---
 task.spawn(function()
     while task.wait(0.5) do
-        if autoResetAim then
-            local closest, min = nil, math.huge
-            for _, p in pairs(Players:GetPlayers()) do
-                if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
-                    local d = (p.Character.Head.Position - player.Character.Head.Position).Magnitude
-                    if d < min then min = d; closest = p end
-                end
+        local closest, min = nil, math.huge
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
+                local dist = (p.Character.Head.Position - player.Character.Head.Position).Magnitude
+                if dist < min then min = dist; closest = p end
             end
-            targetPlayer = closest
+        end
+        targetPlayer = closest
+        if targetPlayer then
+            nameLabel.Text = targetPlayer.Name
+            pcall(function() avatar.Image = Players:GetUserThumbnailAsync(targetPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48) end)
+        else
+            nameLabel.Text = "No Target"
         end
     end
 end)
 
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe or not targetPlayer then return end
-    local keys = {Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four, Enum.KeyCode.R}
-    for _, k in pairs(keys) do if input.KeyCode == k then isLocking = true; task.wait(0.01); isLocking = false end end
-    if input.KeyCode == Enum.KeyCode.Q then
-        if not (UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.D)) then
-            isLocking = true; task.wait(0.3); isLocking = false
-        end
+    
+    local isSkill = (settings.Aim1 and ({[Enum.KeyCode.One]=true, [Enum.KeyCode.Two]=true, [Enum.KeyCode.Three]=true, [Enum.KeyCode.Four]=true, [Enum.KeyCode.R]=true})[input.KeyCode])
+    local isDash = (settings.AimDash and input.KeyCode == Enum.KeyCode.Q and not (UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.D)))
+    
+    if isSkill or isDash then
+        isLocking = true
+        task.wait(isDash and 0.3 or 0.01)
+        isLocking = false
     end
 end)
 
@@ -107,11 +81,7 @@ RunService.RenderStepped:Connect(function()
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
             local hl = p.Character:FindFirstChild("ESP_H") or Instance.new("Highlight", p.Character)
-            hl.Name = "ESP_H"; hl.Enabled = espEnabled
-            local tag = p.Character.Head:FindFirstChild("ESP_T") or Instance.new("BillboardGui", p.Character.Head)
-            tag.Name = "ESP_T"; tag.AlwaysOnTop = true; tag.Enabled = espEnabled
-            if not tag:FindFirstChild("L") then local l = Instance.new("TextLabel", tag); l.Name = "L"; l.Size = UDim2.new(1,0,1,0); l.BackgroundTransparency = 1 end
-            tag.L.Text = p.Name
+            hl.Enabled = settings.espEnabled
         end
     end
 end)
