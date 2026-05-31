@@ -1,3 +1,29 @@
+-- Thêm dòng này vào đầu script để Humanoid không tự ý xoay camera
+local humanoid = player.Character:FindFirstChild("Humanoid")
+if humanoid then
+    humanoid.AutoRotate = false -- Tắt cơ chế tự xoay theo hướng di chuyển của Roblox
+end
+
+RunService.RenderStepped:Connect(function()
+    if aimbotEnabled then
+        local target = getClosestPlayer()
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            local myRoot = player.Character:FindFirstChild("HumanoidRootPart")
+            local targetRoot = target.Character.HumanoidRootPart
+            
+            if myRoot then
+                local targetPos = Vector3.new(targetRoot.Position.X, myRoot.Position.Y, targetRoot.Position.Z)
+                
+                -- Thay vì set CFrame trực tiếp (dễ gây lỗi camera), 
+                -- chúng ta dùng CFrame.lookAt kết hợp với CFrame hiện tại để xoay
+                myRoot.CFrame = CFrame.new(myRoot.Position, targetPos)
+            end
+        end
+    else
+        -- Khi tắt aimbot, bật lại để nhân vật di chuyển bình thường
+        if humanoid then humanoid.AutoRotate = true end
+    end
+end)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Camera = workspace.CurrentCamera
