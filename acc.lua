@@ -1,47 +1,53 @@
 local Players = game:GetService("Players")
-local MarketplaceService = game:GetService("MarketplaceService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
 local player = Players.LocalPlayer
+local flying = false
+local speed = 50 -- Tốc độ bay, bạn có thể chỉnh ở đây
 
--- 1. Tạo UI
-local screenGui = Instance.new("ScreenGui", player.PlayerGui)
-local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 250, 0, 120)
-frame.Position = UDim2.new(0.5, -125, 0.5, -60)
-frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+local function fly()
+    local character = player.Character
+    if not character then return end
+    
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not hrp or not humanoid then return end
 
-local inputBox = Instance.new("TextBox", frame)
-inputBox.Size = UDim2.new(0.8, 0, 0, 40)
-inputBox.Position = UDim2.new(0.1, 0, 0.2, 0)
-inputBox.PlaceholderText = "Nhập Asset ID (Số)..."
-inputBox.Parent = frame
+    if flying then
+        -- Vô hiệu hóa trọng lực và di chuyển theo hướng camera
+        local bv = Instance.new("BodyVelocity")
+        bv.Name = "FlyVelocity"
+        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bv.Velocity = Vector3.new(0, 0, 0)
+        bv.Parent = hrp
+        
+        RunService.RenderStepped:Connect(function()
+            if not flying then 
+                bv:Destroy()
+                return 
+            end
+            
+            local cam = workspace.CurrentCamera
+            local moveDir = Vector3.new(0, 0, 0)
+            
+            -- Điều khiển bằng phím WASD
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir += cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir -= cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir -= cam.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir += cam.CFrame.RightVector end
+            
+            bv.Velocity = moveDir * speed
+        end)
+    end
+end
 
-local equipBtn = Instance.new("TextButton", frame)
-equipBtn.Size = UDim2.new(0.8, 0, 0, 40)
-equipBtn.Position = UDim2.new(0.1, 0, 0.6, 0)
-equipBtn.Text = "Mặc bằng ID"
-equipBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
-equipBtn.Parent = frame
-
--- 2. Logic mặc đồ bằng ID
-equipBtn.MouseButton1Click:Connect(function()
-    local id = tonumber(inputBox.Text)
-    if not id then return end
-
-    -- Load phụ kiện từ Roblox thông qua ID
-    local success, asset = pcall(function()
-        return MarketplaceService:LoadAsset(id)
-    end)
-
-    if success and asset then
-        local accessory = asset:FindFirstChildOfClass("Accessory")
-        if accessory then
-            accessory.Parent = player.Character
-            print("Đã mặc phụ kiện ID: " .. id)
-        else
-            warn("ID này không phải là một Accessory hợp lệ!")
+-- Bật/Tắt bay bằng phím E
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.E then
+        flying = not flying
+        if flying then
+            fly()
         end
-        asset:Destroy() -- Xóa model tạm sau khi lấy xong accessory
-    else
-        warn("Không thể tải ID này: " .. tostring(asset))
     end
 end)
