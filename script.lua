@@ -122,7 +122,7 @@ for _, key in ipairs({Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, En
     modeBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45); modeBtn.TextColor3 = Color3.new(1, 1, 1)
     modeBtn.Text = "Mode: " .. skill.Method
     modeBtn.MouseButton1Click:Connect(function()
-        skill.Method = (skill.Method == "Camera" and "Root" or "Camera") --[cite: 3]
+        skill.Method = (skill.Method == "Camera" and "Root" or "Camera") 
         modeBtn.Text = "Mode: " .. skill.Method
     end)
     
@@ -138,7 +138,7 @@ creditLbl.Text = "Script by Nhật Minh 1602"
 local function doAim(method, duration)
     isLocking = true; currentMethod = method
     local hum = player.Character and player.Character:FindFirstChild("Humanoid")
-    if hum then hum.AutoRotate = false end -- Phá Shift Lock[cite: 1]
+    if hum then hum.AutoRotate = false end 
     task.wait(duration)
     if hum then hum.AutoRotate = true end
     isLocking = false
@@ -147,7 +147,7 @@ UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe or not target then return end
     
     if input.KeyCode == Enum.KeyCode.Q and Config.Dash.Enabled then
-        local movingSide = UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.D) --[cite: 2]
+        local movingSide = UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.D) 
         if not movingSide then doAim("Root", Config.Dash.Duration) end
     elseif Config.Skills[input.KeyCode] and Config.Skills[input.KeyCode].Enabled then
         doAim(Config.Skills[input.KeyCode].Method, 0.1)
@@ -158,7 +158,7 @@ RunService.RenderStepped:Connect(function()
         local headPos = target.Character.Head.Position
         local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
         if currentMethod == "Root" and root then
-            root.CFrame = CFrame.lookAt(root.Position, Vector3.new(headPos.X, root.Position.Y, headPos.Z)) --[cite: 1]
+            root.CFrame = CFrame.lookAt(root.Position, Vector3.new(headPos.X, root.Position.Y, headPos.Z))
         else
             Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, headPos)
         end
@@ -184,7 +184,7 @@ task.spawn(function()
         if target and target.Character then
             nameLbl.Text = target.Name
             pcall(function() avatarImg.Image = Players:GetUserThumbnailAsync(target.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48) end)
-            if Config.ESPEnabled then --[cite: 5]
+            if Config.ESPEnabled then 
                 local hl = Instance.new("Highlight", target.Character); hl.Name = "PrimeHL"
                 hl.FillColor = Color3.new(1, 0, 0)
             end
