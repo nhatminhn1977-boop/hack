@@ -7,8 +7,9 @@ local player = Players.LocalPlayer
 local settings = { AimDash = true, AimSkills = true, espEnabled = false }
 local targetPlayer = nil
 local isLocking = false
+local isDashing = false -- Biến riêng để phân biệt dash
 
--- UI Tối giản
+-- --- UI Tối giản ---
 local gui = Instance.new("ScreenGui", player.PlayerGui)
 local frame = Instance.new("Frame", gui)
 frame.Size = UDim2.new(0, 200, 0, 230)
@@ -17,7 +18,6 @@ frame.BackgroundColor3 = Color3.new(0, 0, 0)
 frame.Active = true
 frame.Draggable = true
 
--- Hiển thị thông tin Target
 local infoLabel = Instance.new("TextLabel", frame)
 infoLabel.Size = UDim2.new(1, 0, 0, 40)
 infoLabel.Text = "Target: None"
@@ -29,7 +29,6 @@ avatarImg.Size = UDim2.new(0, 40, 0, 40)
 avatarImg.Position = UDim2.new(0.4, 0, 0.2, 0)
 avatarImg.BackgroundTransparency = 1
 
--- Nút bấm
 local function addBtn(text, key, y)
     local btn = Instance.new("TextButton", frame)
     btn.Size = UDim2.new(0.9, 0, 0, 30)
@@ -45,7 +44,7 @@ addBtn("Dash", "AimDash", 90)
 addBtn("Skills", "AimSkills", 130)
 addBtn("ESP", "espEnabled", 170)
 
--- Logic
+-- --- Logic ---
 task.spawn(function()
     while task.wait(0.5) do
         local closest, min = nil, math.huge
@@ -69,17 +68,30 @@ UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe or not targetPlayer then return end
     local isSkill = (settings.AimSkills and ({[Enum.KeyCode.One]=true, [Enum.KeyCode.Two]=true, [Enum.KeyCode.Three]=true, [Enum.KeyCode.Four]=true, [Enum.KeyCode.R]=true})[input.KeyCode])
     local isDash = (settings.AimDash and input.KeyCode == Enum.KeyCode.Q and not (UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.D)))
+    
     if isSkill or isDash then
         isLocking = true
-        task.wait(isDash and 0.4 or 0.01) -- Đã chỉnh thành 0.4s cho Dash
+        isDashing = isDash
+        task.wait(isDash and 0.4 or 0.01)
         isLocking = false
+        isDashing = false
     end
 end)
 
 RunService.RenderStepped:Connect(function()
     if isLocking and targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
-        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPlayer.Character.Head.Position)
+        local targetPos = targetPlayer.Character.Head.Position
+        
+        if isDashing then
+            -- Chỉ aim ngang: Giữ nguyên độ cao Y của Camera hiện tại
+            local lookPos = Vector3.new(targetPos.X, Camera.CFrame.Position.Y, targetPos.Z)
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, lookPos)
+        else
+            -- Aim bình thường (cả dọc và ngang)
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPos)
+        end
     end
+    
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
             local hl = p.Character:FindFirstChild("ESP_H") or Instance.new("Highlight", p.Character)
