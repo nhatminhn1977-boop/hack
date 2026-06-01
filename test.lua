@@ -25,6 +25,7 @@ local uiMinimized = false
 
 -- --- GIAO DIỆN (UI) HOÀN HẢO ---
 local gui = Instance.new("ScreenGui", player.PlayerGui)
+gui.ResetOnSpawn = false
 local mainFrame = Instance.new("Frame", gui)
 mainFrame.Size = UDim2.new(0, 260, 0, 425)
 mainFrame.Position = UDim2.new(0.05, 0, 0.15, 0)
