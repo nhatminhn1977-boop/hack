@@ -98,7 +98,7 @@ createMainBtn("Lock Target: OFF", 65, function(btn)
 end)
 createMainBtn("ESP: ON", 100, function(btn)
     Config.ESPEnabled = not Config.ESPEnabled
-    btn.Text = "ESP: " .. (Config.ESPEnabled and "ON" or "OFF")
+    btn.Text = "ESP NEAREST: " .. (Config.ESPEnabled and "ON" or "OFF")
 end)
 
 createMainBtn("Auto Aim Dash: ON", 135, function(btn)
