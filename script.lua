@@ -9,7 +9,7 @@ local Config = {
         [Enum.KeyCode.One] = {Enabled = true, Method = "Camera"}, 
         [Enum.KeyCode.Two] = {Enabled = true, Method = "Camera"},
         [Enum.KeyCode.Three] = {Enabled = true, Method = "Camera"},
-        [Enum.KeyCode.Four] = {Enabled = true, Method = "Camera"},
+        [Enum.KeyCode.Four] = {Enabled = true, Method = "Camera"},gui.ResetOnSpawn = false
         [Enum.KeyCode.R] = {Enabled = true, Method = "Camera"}
     },
     LockTarget = false,
@@ -20,6 +20,7 @@ local isLocking = false
 local currentMethod = "Camera"
 local uiMinimized = false
 local gui = Instance.new("ScreenGui", player.PlayerGui)
+gui.ResetOnSpawn = false
 local mainFrame = Instance.new("Frame", gui)
 mainFrame.Size = UDim2.new(0, 260, 0, 425)
 mainFrame.Position = UDim2.new(0.05, 0, 0.15, 0)
