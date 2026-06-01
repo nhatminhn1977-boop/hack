@@ -200,6 +200,7 @@ end)
 -- --- VÒNG LẶP QUÉT MỤC TIÊU & CẬP NHẬT ESP (0.2S) ---
 task.spawn(function()
     while task.wait(0.2) do
+        if not player.Character or not player.Character:FindFirstChild("Head") then continue end
         if not Config.LockTarget or not target or not target.Parent then
             local closest, min = nil, 9999
             for _, p in pairs(Players:GetPlayers()) do
