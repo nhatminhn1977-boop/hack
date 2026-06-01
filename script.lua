@@ -97,7 +97,7 @@ createMainBtn("Lock Target: OFF", 65, function(btn)
     Config.LockTarget = not Config.LockTarget
     btn.Text = "Lock Target: " .. (Config.LockTarget and "ON" or "OFF")
 end)
-createMainBtn("ESP: ON", 100, function(btn)
+createMainBtn("ESP NEAREST: ON", 100, function(btn)
     Config.ESPEnabled = not Config.ESPEnabled
     btn.Text = "ESP NEAREST: " .. (Config.ESPEnabled and "ON" or "OFF")
 end)
