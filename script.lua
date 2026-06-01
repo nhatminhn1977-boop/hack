@@ -23,23 +23,60 @@ local isLocking = false
 local currentMethod = "Camera"
 local uiMinimized = false
 
--- --- GIAO DIỆN (UI) FIX OVERFLOW & MINIMIZE ---
+-- --- GIAO DIỆN (UI) HOÀN HẢO ---
 local gui = Instance.new("ScreenGui", player.PlayerGui)
 local mainFrame = Instance.new("Frame", gui)
-mainFrame.Size = UDim2.new(0, 260, 0, 425) -- Chiều cao tối ưu mới[cite: 6]
+mainFrame.Size = UDim2.new(0, 260, 0, 425)
 mainFrame.Position = UDim2.new(0.05, 0, 0.15, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-mainFrame.Active = true; mainFrame.Draggable = true
-mainFrame.ClipsDescendants = true -- Ẩn mọi thứ thừa thãi khi thu gọn[cite: 6]
+mainFrame.Active = true
+mainFrame.ClipsDescendants = true 
 
+-- --- HỆ THỐNG KÉO THẢ UI CỰC MƯỢT (CUSTOM DRAG) ---
+local dragToggle, dragStart, startPos
+local dragInput
+
+local function updateInput(input)
+    local delta = input.Position - dragStart
+    local position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    game:GetService("TweenService"):Create(mainFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = position}):Play()
+end
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragToggle = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragToggle = false
+            end
+        end)
+    end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragToggle then
+        updateInput(input)
+    end
+end)
+
+-- --- CÁC THÀNH PHẦN NỘI DUNG UI ---[cite: 6]
 local contentFrame = Instance.new("Frame", mainFrame)
 contentFrame.Size = UDim2.new(1, 0, 1, -35)
 contentFrame.Position = UDim2.new(0, 0, 0, 35)
 contentFrame.BackgroundTransparency = 1
 
--- Nút Thu gọn / Mở rộng (Fix lỗi kích thước)[cite: 6]
+-- Nút Thu gọn / Mở rộng
 local minBtn = Instance.new("TextButton", mainFrame)
-minBtn.Size = UDim2.new(1, 0, 0, 35) -- Cố định chiều cao 35 pixel không sợ bị bóp méo[cite: 6]
+minBtn.Size = UDim2.new(1, 0, 0, 35)
 minBtn.Position = UDim2.new(0, 0, 0, 0)
 minBtn.Text = "Rút gọn UI"
 minBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
@@ -51,15 +88,15 @@ minBtn.MouseButton1Click:Connect(function()
     uiMinimized = not uiMinimized
     contentFrame.Visible = not uiMinimized
     if uiMinimized then
-        mainFrame.Size = UDim2.new(0, 260, 0, 35) -- Thu gọn chỉ còn thanh tiêu đề[cite: 6]
+        mainFrame.Size = UDim2.new(0, 260, 0, 35)
         minBtn.Text = "Mở rộng UI"
     else
-        mainFrame.Size = UDim2.new(0, 260, 0, 425) -- Trở lại kích thước cũ[cite: 6]
+        mainFrame.Size = UDim2.new(0, 260, 0, 425)
         minBtn.Text = "Rút gọn UI"
     end
 end)
 
--- Khu vực thông tin mục tiêu[cite: 6]
+-- Thông tin mục tiêu[cite: 6]
 local avatarImg = Instance.new("ImageLabel", contentFrame)
 avatarImg.Size = UDim2.new(0, 45, 0, 45); avatarImg.Position = UDim2.new(0.05, 0, 0, 10)
 local nameLbl = Instance.new("TextLabel", contentFrame)
@@ -67,7 +104,7 @@ nameLbl.Size = UDim2.new(0, 180, 0, 45); nameLbl.Position = UDim2.new(0.28, 0, 0
 nameLbl.TextColor3 = Color3.new(1, 1, 1); nameLbl.BackgroundTransparency = 1; nameLbl.Text = "No Target"
 nameLbl.TextXAlignment = Enum.TextXAlignment.Left
 
--- Hàm tạo nút tính năng chính (Full Width)[cite: 6]
+-- Hàm tạo nút tính năng chính[cite: 6]
 local function createMainBtn(text, y, callback)
     local btn = Instance.new("TextButton", contentFrame)
     btn.Size = UDim2.new(0.9, 0, 0, 28); btn.Position = UDim2.new(0.05, 0, 0, y)
@@ -76,7 +113,6 @@ local function createMainBtn(text, y, callback)
     return btn
 end
 
--- Khởi tạo các nút chính[cite: 6]
 createMainBtn("Lock Target: OFF", 65, function(btn)
     Config.LockTarget = not Config.LockTarget
     btn.Text = "Lock Target: " .. (Config.LockTarget and "ON" or "OFF")
@@ -92,12 +128,11 @@ createMainBtn("Auto Aim Dash: ON", 135, function(btn)
     btn.Text = "Auto Aim Dash: " .. (Config.Dash.Enabled and "ON" or "OFF")
 end)
 
--- Quản lý Skill (Thiết kế dạng hàng đôi - Side by Side giúp tiết kiệm diện tích)[cite: 3, 4, 6]
+-- Quản lý các nút Skill (Side-by-Side)[cite: 3, 4, 6]
 local skillY = 175
 for _, key in ipairs({Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four, Enum.KeyCode.R}) do
     local skill = Config.Skills[key]
     
-    -- Nút bật/tắt bên trái[cite: 6]
     local toggleBtn = Instance.new("TextButton", contentFrame)
     toggleBtn.Size = UDim2.new(0.43, 0, 0, 28); toggleBtn.Position = UDim2.new(0.05, 0, 0, skillY)
     toggleBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45); toggleBtn.TextColor3 = Color3.new(1, 1, 1)
@@ -107,7 +142,6 @@ for _, key in ipairs({Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, En
         toggleBtn.Text = "Skill " .. key.Name .. ": " .. (skill.Enabled and "ON" or "OFF")
     end)
     
-    -- Nút chỉnh chế độ bên phải[cite: 3, 6]
     local modeBtn = Instance.new("TextButton", contentFrame)
     modeBtn.Size = UDim2.new(0.43, 0, 0, 28); modeBtn.Position = UDim2.new(0.52, 0, 0, skillY)
     modeBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45); modeBtn.TextColor3 = Color3.new(1, 1, 1)
@@ -117,23 +151,23 @@ for _, key in ipairs({Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, En
         modeBtn.Text = "Mode: " .. skill.Method
     end)
     
-    skillY = skillY + 35 -- Khoảng cách giãn cách ngắn hơn nhờ chia đôi hàng[cite: 6]
+    skillY = skillY + 35
 end
 
--- --- DÒNG CREDIT (CRE) CỦA BẠN ---[cite: 6]
+-- --- DÒNG CREDIT ĐÁNH DẤU BẢN QUYỀN ---[cite: 6]
 local creditLbl = Instance.new("TextLabel", contentFrame)
 creditLbl.Size = UDim2.new(1, 0, 0, 20)
-creditLbl.Position = UDim2.new(0, 0, 0, 360) -- Nằm gọn gàng dưới đáy[cite: 6]
+creditLbl.Position = UDim2.new(0, 0, 0, 360) 
 creditLbl.TextColor3 = Color3.fromRGB(120, 120, 120)
 creditLbl.BackgroundTransparency = 1
 creditLbl.TextSize = 12
-creditLbl.Text = "Script by Nhật Minh 1602" -- Bạn sửa tên bạn ở đây nhé![cite: 6]
+creditLbl.Text = "Script by Nhật Minh" -- Bạn hãy điền tên mình vào đây nhé![cite: 6]
 
--- --- LOGIC XỬ LÝ GAMEPLAY (AIM & BYPASS) ---
+-- --- LOGIC XỬ LÝ GAMEPLAY ---
 local function doAim(method, duration)
     isLocking = true; currentMethod = method
     local hum = player.Character and player.Character:FindFirstChild("Humanoid")
-    if hum then hum.AutoRotate = false end -- Phá vỡ vòng lặp tự xoay của Shift Lock[cite: 1]
+    if hum then hum.AutoRotate = false end -- Phá Shift Lock[cite: 1]
     task.wait(duration)
     if hum then hum.AutoRotate = true end
     isLocking = false
@@ -143,8 +177,7 @@ UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe or not target then return end
     
     if input.KeyCode == Enum.KeyCode.Q and Config.Dash.Enabled then
-        -- Logic chặn ngắm khi dùng Side Dash (giữ A, S, D)[cite: 2]
-        local movingSide = UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.D)
+        local movingSide = UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.D) --[cite: 2]
         if not movingSide then doAim("Root", Config.Dash.Duration) end
     elseif Config.Skills[input.KeyCode] and Config.Skills[input.KeyCode].Enabled then
         doAim(Config.Skills[input.KeyCode].Method, 0.1)
@@ -156,15 +189,14 @@ RunService.RenderStepped:Connect(function()
         local headPos = target.Character.Head.Position
         local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
         if currentMethod == "Root" and root then
-            -- Bypass hoàn toàn camera góc nhìn thứ 3 (Shift Lock)[cite: 1]
-            root.CFrame = CFrame.lookAt(root.Position, Vector3.new(headPos.X, root.Position.Y, headPos.Z))
+            root.CFrame = CFrame.lookAt(root.Position, Vector3.new(headPos.X, root.Position.Y, headPos.Z)) --[cite: 1]
         else
             Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, headPos)
         end
     end
 end)
 
--- --- TARGETING & ESP LOOPS (RESET CHUẨN ĐỊNH KỲ 0.2S) ---
+-- --- VÒNG LẶP QUÉT MỤC TIÊU & CẬP NHẬT ESP (0.2S) ---
 task.spawn(function()
     while task.wait(0.2) do
         if not Config.LockTarget or not target or not target.Parent then
