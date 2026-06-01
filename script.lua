@@ -1,13 +1,12 @@
--- SCRIPT AIM BOT PRIME
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- CẤU HÌNH CÁC PHÍM SKILL
+-- CẤU HÌNH
 local Config = {
-    -- Tùy chọn: "Camera" hoặc "Root"
+    -- Mặc định skill là Camera, có thể đổi sang Root
     SkillMethods = { [Enum.KeyCode.One]="Camera", [Enum.KeyCode.Two]="Camera", [Enum.KeyCode.Three]="Camera", [Enum.KeyCode.Four]="Camera", [Enum.KeyCode.R]="Camera" },
 }
 
@@ -15,27 +14,31 @@ local target = nil
 local isLocking = false
 local currentMethod = "Camera"
 
--- --- UI TỐI GIẢN (KHÔNG FONT ĐỂ TRÁNH LỖI) ---
+-- UI TỐI GIẢN (Sửa lỗi nút không hoạt động bằng cách định nghĩa hàm tạo nút tách biệt)
 local gui = Instance.new("ScreenGui", player.PlayerGui)
-local frame = Instance.new("Frame", gui); frame.Size = UDim2.new(0, 200, 0, 300); frame.Position = UDim2.new(0.05, 0, 0.2, 0); frame.BackgroundColor3 = Color3.new(0,0,0); frame.Active = true; frame.Draggable = true
-local avatar = Instance.new("ImageLabel", frame); avatar.Size = UDim2.new(0, 50, 0, 50); avatar.Position = UDim2.new(0.1, 0, 0.05, 0)
-local name = Instance.new("TextLabel", frame); name.Size = UDim2.new(0, 100, 0, 50); name.Position = UDim2.new(0.4, 0, 0.05, 0); name.TextColor3 = Color3.new(1,1,1); name.BackgroundTransparency = 1
+local frame = Instance.new("Frame", gui); frame.Size = UDim2.new(0, 220, 0, 350); frame.Position = UDim2.new(0.05, 0, 0.2, 0); frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30); frame.Active = true; frame.Draggable = true
+local avatar = Instance.new("ImageLabel", frame); avatar.Size = UDim2.new(0, 50, 0, 50); avatar.Position = UDim2.new(0.05, 0, 0.05, 0)
+local name = Instance.new("TextLabel", frame); name.Size = UDim2.new(0, 150, 0, 50); name.Position = UDim2.new(0.35, 0, 0.05, 0); name.TextColor3 = Color3.new(1,1,1); name.BackgroundTransparency = 1
 
-local function createBtn(key)
-    local btn = Instance.new("TextButton", frame); btn.Size = UDim2.new(0.9, 0, 0, 30); btn.Position = UDim2.new(0.05, 0, 0, 100 + (key.Value * 10))
-    btn.Text = "Skill " .. key.Name .. ": " .. Config.SkillMethods[key]
+-- Hàm tạo nút chuẩn xác
+local function createButton(keyCode, yOffset)
+    local btn = Instance.new("TextButton", frame)
+    btn.Size = UDim2.new(0.9, 0, 0, 35); btn.Position = UDim2.new(0.05, 0, 0, yOffset)
+    btn.Text = "Skill " .. keyCode.Name .. ": " .. Config.SkillMethods[keyCode]
+    
     btn.MouseButton1Click:Connect(function()
-        Config.SkillMethods[key] = (Config.SkillMethods[key] == "Camera" and "Root" or "Camera")
-        btn.Text = "Skill " .. key.Name .. ": " .. Config.SkillMethods[key]
+        Config.SkillMethods[keyCode] = (Config.SkillMethods[keyCode] == "Camera" and "Root" or "Camera")
+        btn.Text = "Skill " .. keyCode.Name .. ": " .. Config.SkillMethods[keyCode]
     end)
 end
-createBtn(Enum.KeyCode.One); createBtn(Enum.KeyCode.Two); createBtn(Enum.KeyCode.Three); createBtn(Enum.KeyCode.Four); createBtn(Enum.KeyCode.R)
 
--- --- LOGIC AIM ---
-local function startAim(method, duration)
+createButton(Enum.KeyCode.One, 110); createButton(Enum.KeyCode.Two, 150); createButton(Enum.KeyCode.Three, 190); createButton(Enum.KeyCode.Four, 230); createButton(Enum.KeyCode.R, 270)
+
+-- LOGIC AIM BYPASS SHIFT LOCK
+local function executeAim(method, duration)
     isLocking = true; currentMethod = method
     local hum = player.Character and player.Character:FindFirstChild("Humanoid")
-    if hum then hum.AutoRotate = false end -- Phá Shift Lock
+    if hum then hum.AutoRotate = false end -- Bypass Shift Lock bằng cách tắt tự xoay
     task.wait(duration)
     if hum then hum.AutoRotate = true end
     isLocking = false
@@ -44,22 +47,20 @@ end
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe or not target then return end
     
-    -- DASH: Xoay người (Root), Aim 0.4s, bỏ qua nếu đang Side Dash
     if input.KeyCode == Enum.KeyCode.Q then
-        local side = UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.D)
-        if not side then startAim("Root", 0.4) end
-    -- SKILLS: Tùy chỉnh
+        -- Dash: Xoay người, bỏ qua nếu đang giữ A, S, D
+        local movingSide = UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.D)
+        if not movingSide then executeAim("Root", 0.4) end
     elseif Config.SkillMethods[input.KeyCode] then
-        startAim(Config.SkillMethods[input.KeyCode], 0.1)
+        executeAim(Config.SkillMethods[input.KeyCode], 0.1)
     end
 end)
 
--- --- VÒNG LẶP RENDER ---
+-- LOOP CHÍNH
 RunService.RenderStepped:Connect(function()
     if isLocking and target and target.Character:FindFirstChild("Head") then
         local headPos = target.Character.Head.Position
         local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        
         if currentMethod == "Root" and root then
             root.CFrame = CFrame.lookAt(root.Position, Vector3.new(headPos.X, root.Position.Y, headPos.Z))
         else
@@ -68,7 +69,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- --- TÌM TARGET & ESP (RESET 0.2S) ---
+-- TARGETING & ESP (RESET 0.2S)
 task.spawn(function()
     while task.wait(0.2) do
         local min, closest = 9999, nil
