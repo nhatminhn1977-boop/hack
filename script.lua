@@ -1,21 +1,21 @@
+-- SCRIPT AIM BOT PRIME
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- CẤU HÌNH
+-- CẤU HÌNH CÁC PHÍM SKILL
 local Config = {
-    -- SkillMethods: "Camera" hoặc "Root"
+    -- Tùy chọn: "Camera" hoặc "Root"
     SkillMethods = { [Enum.KeyCode.One]="Camera", [Enum.KeyCode.Two]="Camera", [Enum.KeyCode.Three]="Camera", [Enum.KeyCode.Four]="Camera", [Enum.KeyCode.R]="Camera" },
-    ESP = true
 }
 
 local target = nil
 local isLocking = false
 local currentMethod = "Camera"
 
--- UI TỐI GIẢN (KHÔNG FONT - ĐỂ TRÁNH LỖI)
+-- --- UI TỐI GIẢN (KHÔNG FONT ĐỂ TRÁNH LỖI) ---
 local gui = Instance.new("ScreenGui", player.PlayerGui)
 local frame = Instance.new("Frame", gui); frame.Size = UDim2.new(0, 200, 0, 300); frame.Position = UDim2.new(0.05, 0, 0.2, 0); frame.BackgroundColor3 = Color3.new(0,0,0); frame.Active = true; frame.Draggable = true
 local avatar = Instance.new("ImageLabel", frame); avatar.Size = UDim2.new(0, 50, 0, 50); avatar.Position = UDim2.new(0.1, 0, 0.05, 0)
@@ -31,27 +31,32 @@ local function createBtn(key)
 end
 createBtn(Enum.KeyCode.One); createBtn(Enum.KeyCode.Two); createBtn(Enum.KeyCode.Three); createBtn(Enum.KeyCode.Four); createBtn(Enum.KeyCode.R)
 
--- LOGIC AIM (PHƯƠNG PHÁP CŨ: DÙNG AUTOROTATE)
-local function setAim(method, duration)
+-- --- LOGIC AIM ---
+local function startAim(method, duration)
     isLocking = true; currentMethod = method
     local hum = player.Character and player.Character:FindFirstChild("Humanoid")
-    if hum then hum.AutoRotate = false end -- Phá Shift Lock ở đây!
+    if hum then hum.AutoRotate = false end -- Phá Shift Lock
     task.wait(duration)
-    if hum then hum.AutoRotate = true end -- Trả lại quyền
+    if hum then hum.AutoRotate = true end
     isLocking = false
 end
 
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe or not target then return end
+    
+    -- DASH: Xoay người (Root), Aim 0.4s, bỏ qua nếu đang Side Dash
     if input.KeyCode == Enum.KeyCode.Q then
-        setAim("Root", 0.4) -- Dash xoay người 0.4s
+        local side = UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.D)
+        if not side then startAim("Root", 0.4) end
+    -- SKILLS: Tùy chỉnh
     elseif Config.SkillMethods[input.KeyCode] then
-        setAim(Config.SkillMethods[input.KeyCode], 0.1)
+        startAim(Config.SkillMethods[input.KeyCode], 0.1)
     end
 end)
 
+-- --- VÒNG LẶP RENDER ---
 RunService.RenderStepped:Connect(function()
-    if isLocking and target and target.Character and target.Character:FindFirstChild("Head") then
+    if isLocking and target and target.Character:FindFirstChild("Head") then
         local headPos = target.Character.Head.Position
         local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
         
@@ -63,29 +68,23 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- TÌM MỤC TIÊU & ESP
+-- --- TÌM TARGET & ESP (RESET 0.2S) ---
 task.spawn(function()
     while task.wait(0.2) do
         local min, closest = 9999, nil
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
-                local d = (p.Character.Head.Position - player.Character.Head.Position).Magnitude
-                if d < min then min = d; closest = p end
+                local dist = (p.Character.Head.Position - player.Character.Head.Position).Magnitude
+                if dist < min then min = dist; closest = p end
             end
         end
         target = closest
         if target then
             name.Text = target.Name
             pcall(function() avatar.Image = Players:GetUserThumbnailAsync(target.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48) end)
-            -- ESP
-            if not target.Character:FindFirstChild("ESP_Highlight") then
-                local h = Instance.new("Highlight", target.Character); h.Name = "ESP_Highlight"
-            end
+            if not target.Character:FindFirstChild("ESP") then Instance.new("Highlight", target.Character).Name = "ESP" end
         else
-            -- Xóa ESP khi mất target
-            for _, p in pairs(Players:GetPlayers()) do
-                if p.Character and p.Character:FindFirstChild("ESP_Highlight") then p.Character.ESP_Highlight:Destroy() end
-            end
+            for _, p in pairs(Players:GetPlayers()) do if p.Character and p.Character:FindFirstChild("ESP") then p.Character.ESP:Destroy() end end
         end
     end
 end)
