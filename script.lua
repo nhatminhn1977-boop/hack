@@ -1,41 +1,36 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local Camera = workspace.CurrentCamera
 local player = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
--- Cấu hình
-local settings = { 
-    AimDash = true, -- Q mặc định xoay người
-    AimSkills = true, 
-    MethodSkill = "Camera", -- "Camera" hoặc "Root"
-    espEnabled = false 
+-- Cấu hình Aim chi tiết
+local cfg = {
+    Q = "Root", ["1"] = "Camera", ["2"] = "Camera", ["3"] = "Camera", ["4"] = "Camera", ["R"] = "Camera",
+    espEnabled = false
 }
 
-local targetPlayer = nil
+local target = nil
 local isLocking = false
-local isDashing = false
+local dashDuration = 0.4
 
--- --- UI ---
+-- UI Setup
 local gui = Instance.new("ScreenGui", player.PlayerGui)
-local frame = Instance.new("Frame", gui); frame.Size = UDim2.new(0, 220, 0, 320); frame.Position = UDim2.new(0.05, 0, 0.3, 0); frame.BackgroundColor3 = Color3.new(0,0,0); frame.Active = true; frame.Draggable = true
-local infoLabel = Instance.new("TextLabel", frame); infoLabel.Size = UDim2.new(1, 0, 0, 40); infoLabel.Text = "Target: None"; infoLabel.TextColor3 = Color3.new(1,1,1); infoLabel.BackgroundTransparency = 1
+local frame = Instance.new("Frame", gui); frame.Size = UDim2.new(0, 250, 0, 400); frame.Position = UDim2.new(0.05, 0, 0.2, 0); frame.BackgroundColor3 = Color3.new(0,0,0); frame.Active = true; frame.Draggable = true
+local avatarImg = Instance.new("ImageLabel", frame); avatarImg.Size = UDim2.new(0, 50, 0, 50); avatarImg.Position = UDim2.new(0.05, 0, 0.05, 0)
+local nameLabel = Instance.new("TextLabel", frame); nameLabel.Size = UDim2.new(0, 150, 0, 50); nameLabel.Position = UDim2.new(0.3, 0, 0.05, 0); nameLabel.Text = "No Target"; nameLabel.TextColor3 = Color3.new(1,1,1); nameLabel.BackgroundTransparency = 1
 
--- Nút Toggles
-local function addBtn(text, key, val, y)
-    local btn = Instance.new("TextButton", frame); btn.Size = UDim2.new(0.9, 0, 0, 30); btn.Position = UDim2.new(0.05, 0, 0, y); btn.Text = text .. ": " .. tostring(val)
+local function createToggle(name, key, y)
+    local btn = Instance.new("TextButton", frame); btn.Size = UDim2.new(0.9, 0, 0, 30); btn.Position = UDim2.new(0.05, 0, 0, y); btn.Text = name .. ": " .. cfg[key]
     btn.MouseButton1Click:Connect(function()
-        if type(settings[key]) == "boolean" then settings[key] = not settings[key]
-        else settings[key] = (settings[key] == "Camera" and "Root" or "Camera") end
-        btn.Text = text .. ": " .. tostring(settings[key])
+        cfg[key] = (cfg[key] == "Camera" and "Root" or "Camera")
+        btn.Text = name .. ": " .. cfg[key]
     end)
 end
-addBtn("Skill Method", "MethodSkill", "Camera", 50)
-addBtn("Aim Dash", "AimDash", true, 90)
-addBtn("Aim Skills", "AimSkills", true, 130)
-addBtn("ESP Nearest", "espEnabled", false, 170)
 
--- --- Logic ---
+createToggle("Dash (Q)", "Q", 120); createToggle("Skill 1", "1", 160); createToggle("Skill 2", "2", 200); createToggle("Skill 3", "3", 240); createToggle("Skill 4", "4", 280); createToggle("Skill R", "R", 320)
+
+-- Logic
 task.spawn(function()
     while task.wait(0.5) do
         local closest, min = nil, math.huge
@@ -45,52 +40,38 @@ task.spawn(function()
                 if d < min then min = d; closest = p end
             end
         end
-        targetPlayer = closest
-        if targetPlayer then infoLabel.Text = "Target: " .. targetPlayer.Name end
+        target = closest
+        if target then nameLabel.Text = target.Name; pcall(function() avatarImg.Image = Players:GetUserThumbnailAsync(target.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48) end) end
     end
 end)
 
+local activeMethod = nil
 UserInputService.InputBegan:Connect(function(input, gpe)
-    if gpe or not targetPlayer then return end
-    local isSkill = (settings.AimSkills and ({[Enum.KeyCode.One]=true, [Enum.KeyCode.Two]=true, [Enum.KeyCode.Three]=true, [Enum.KeyCode.Four]=true, [Enum.KeyCode.R]=true})[input.KeyCode])
-    local isDash = (settings.AimDash and input.KeyCode == Enum.KeyCode.Q and not (UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.D)))
+    if gpe or not target then return end
+    local keyMap = {[Enum.KeyCode.Q]="Q", [Enum.KeyCode.One]="1", [Enum.KeyCode.Two]="2", [Enum.KeyCode.Three]="3", [Enum.KeyCode.Four]="4", [Enum.KeyCode.R]="R"}
+    local k = keyMap[input.KeyCode]
     
-    if isSkill or isDash then
+    if k then
+        activeMethod = cfg[k]
         isLocking = true
-        isDashing = isDash
-        task.wait(isDash and 0.4 or 0.01)
+        task.wait(k == "Q" and dashDuration or 0.1)
         isLocking = false
-        isDashing = false
     end
 end)
 
 RunService.RenderStepped:Connect(function()
+    if not isLocking or not target or not target.Character:FindFirstChild("Head") then return end
     local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    local targetPos = target.Character.Head.Position
     
-    -- ESP Nearest Only
-    for _, p in pairs(Players:GetPlayers()) do
-        local hl = p.Character and p.Character:FindFirstChild("ESP_H")
-        if hl then hl:Destroy() end
-        local tag = p.Character and p.Character.Head:FindFirstChild("ESP_T")
-        if tag then tag:Destroy() end
-    end
-    
-    if settings.espEnabled and targetPlayer and targetPlayer.Character then
-        local hl = Instance.new("Highlight", targetPlayer.Character); hl.Name = "ESP_H"
-        local tag = Instance.new("BillboardGui", targetPlayer.Character.Head); tag.Name = "ESP_T"; tag.AlwaysOnTop = true; tag.Size = UDim2.new(0, 100, 0, 50)
-        local lbl = Instance.new("TextLabel", tag); lbl.Size = UDim2.new(1,0,1,0); lbl.Text = targetPlayer.Name; lbl.BackgroundTransparency = 1; lbl.TextColor3 = Color3.new(1,1,1)
-    end
-
-    -- Aim Logic
-    if isLocking and targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
-        local targetPos = targetPlayer.Character.Head.Position
-        if isDashing or settings.MethodSkill == "Root" then
-            if root then
-                local flatTarget = Vector3.new(targetPos.X, root.Position.Y, targetPos.Z)
-                root.CFrame = CFrame.lookAt(root.Position, flatTarget)
-            end
-        else
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPos)
-        end
+    if activeMethod == "Root" and root then
+        -- Root Aim: Xoay nhân vật bỏ qua Shift Lock
+        local flatTarget = Vector3.new(targetPos.X, root.Position.Y, targetPos.Z)
+        root.CFrame = CFrame.lookAt(root.Position, flatTarget)
+        player.Character.Humanoid.AutoRotate = false
+    elseif activeMethod == "Camera" then
+        -- Camera Aim: Ép camera nhìn theo
+        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPos)
+        player.Character.Humanoid.AutoRotate = true
     end
 end)
