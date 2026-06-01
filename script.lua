@@ -1,72 +1,72 @@
+-- SCRIPT TỐI ƯU HÓA CAO ĐỘ
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-local targetPlayer = nil
-local isLocking = false
-local isDashing = false
+-- CẤU HÌNH CÁ NHÂN: Sửa "Camera" thành "Root" nếu muốn xoay người
+local Config = {
+    AimMethods = { [Enum.KeyCode.One] = "Camera", [Enum.KeyCode.Two] = "Camera", [Enum.KeyCode.Three] = "Camera", [Enum.KeyCode.Four] = "Camera", [Enum.KeyCode.R] = "Camera" },
+    DashMethod = "Root",
+    ESP = true
+}
 
--- --- UI Tối giản (Fix lỗi Font) ---
+local target = nil
+local isLocking = false
+local currentMethod = "Camera"
+
+-- Tạo UI cơ bản nhất để tránh lỗi
 local gui = Instance.new("ScreenGui", player.PlayerGui)
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 200, 0, 150)
-frame.Position = UDim2.new(0.05, 0, 0.3, 0)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-frame.Active = true
-frame.Draggable = true
+frame.Size = UDim2.new(0, 200, 0, 150); frame.Position = UDim2.new(0.05, 0, 0.3, 0); frame.BackgroundColor3 = Color3.new(0,0,0)
+frame.Active = true; frame.Draggable = true
+local avatar = Instance.new("ImageLabel", frame); avatar.Size = UDim2.new(0, 50, 0, 50); avatar.Position = UDim2.new(0, 5, 0, 5)
+local name = Instance.new("TextLabel", frame); name.Size = UDim2.new(0, 100, 0, 50); name.Position = UDim2.new(0, 60, 0, 5); name.TextColor3 = Color3.new(1,1,1); name.BackgroundTransparency = 1
 
-local status = Instance.new("TextLabel", frame)
-status.Size = UDim2.new(1, 0, 1, 0)
-status.Text = "Combat Assist Active"
-status.TextColor3 = Color3.new(1, 1, 1)
-status.BackgroundTransparency = 1
-
--- --- Logic Aim & Dash ---
+-- Logic tìm mục tiêu
 task.spawn(function()
     while task.wait(0.5) do
-        local closest, min = nil, math.huge
+        local min, closest = 9999, nil
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
-                local d = (p.Character.Head.Position - player.Character.Head.Position).Magnitude
-                if d < min then min = d; closest = p end
+                local dist = (p.Character.Head.Position - player.Character.Head.Position).Magnitude
+                if dist < min then min = dist; closest = p end
             end
         end
-        targetPlayer = closest
+        target = closest
+        if target then
+            name.Text = target.Name
+            pcall(function() avatar.Image = Players:GetUserThumbnailAsync(target.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48) end)
+        end
     end
 end)
 
+-- Logic Dash và Skill
 UserInputService.InputBegan:Connect(function(input, gpe)
-    if gpe or not targetPlayer then return end
+    if gpe or not target then return end
     
-    -- Xử lý Dash (Q) - Aim xoay người trong 0.4s
-    if input.KeyCode == Enum.KeyCode.Q then
+    local method = (input.KeyCode == Enum.KeyCode.Q) and Config.DashMethod or Config.AimMethods[input.KeyCode]
+    if method then
+        currentMethod = method
         isLocking = true
-        isDashing = true
-        task.wait(0.4)
-        isDashing = false
-        isLocking = false
-    -- Xử lý Skills 1,2,3,4,R - Aim Camera
-    elseif ({[Enum.KeyCode.One]=true, [Enum.KeyCode.Two]=true, [Enum.KeyCode.Three]=true, [Enum.KeyCode.Four]=true, [Enum.KeyCode.R]=true})[input.KeyCode] then
-        isLocking = true
-        task.wait(0.1)
+        task.wait(input.KeyCode == Enum.KeyCode.Q and 0.4 or 0.1)
         isLocking = false
     end
 end)
 
+-- RenderStepped xử lý Aiming (Đè lên Shift Lock)
 RunService.RenderStepped:Connect(function()
-    if not isLocking or not targetPlayer or not targetPlayer.Character then return end
-    local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    local head = targetPlayer.Character:FindFirstChild("Head")
-    if not head then return end
-
-    if isDashing and root then
-        -- Xoay người (Aim ngang)
-        local flatTarget = Vector3.new(head.Position.X, root.Position.Y, head.Position.Z)
-        root.CFrame = CFrame.lookAt(root.Position, flatTarget)
-    else
-        -- Aim Camera (Aim dọc/ngang)
-        Camera.CFrame = CFrame.new(Camera.CFrame.Position, head.Position)
+    if isLocking and target and target.Character and target.Character:FindFirstChild("Head") then
+        local headPos = target.Character.Head.Position
+        if currentMethod == "Root" then
+            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if root then
+                root.CFrame = CFrame.lookAt(root.Position, Vector3.new(headPos.X, root.Position.Y, headPos.Z))
+            end
+        else
+            -- Ép Camera nhìn mục tiêu, Shift Lock không thể cản được
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, headPos)
+        end
     end
 end)
