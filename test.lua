@@ -4,17 +4,16 @@ local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local player = Players.LocalPlayer
 local Config = {
-    Dash = {Enabled = true, Method = "Root", Duration = 0.4}, --[cite: 1]
+    Dash = {Enabled = true, Method = "Root", Duration = 0.4}, 
     Skills = {
-        [Enum.KeyCode.One] = {Enabled = true, Method = "Camera"}, --[cite: 3, 4]
+        [Enum.KeyCode.One] = {Enabled = true, Method = "Camera"}, 
         [Enum.KeyCode.Two] = {Enabled = true, Method = "Camera"},
         [Enum.KeyCode.Three] = {Enabled = true, Method = "Camera"},
         [Enum.KeyCode.Four] = {Enabled = true, Method = "Camera"},
         [Enum.KeyCode.R] = {Enabled = true, Method = "Camera"}
     },
     LockTarget = false,
-    ESPEnabled = true --[cite: 5]
-}
+    ESPEnabled = true
 local target = nil
 local isLocking = false
 local currentMethod = "Camera"
@@ -50,7 +49,6 @@ minBtn.MouseButton1Click:Connect(function()
         minBtn.Text = "Rút gọn UI"
     end
 end)
--- Khu vực thông tin mục tiêu[cite: 6]
 local avatarImg = Instance.new("ImageLabel", contentFrame)
 avatarImg.Size = UDim2.new(0, 45, 0, 45); avatarImg.Position = UDim2.new(0.05, 0, 0, 10)
 local nameLbl = Instance.new("TextLabel", contentFrame)
@@ -69,7 +67,7 @@ createMainBtn("Lock Target: OFF", 65, function(btn)
     btn.Text = "Lock Target: " .. (Config.LockTarget and "ON" or "OFF")
 end)
 createMainBtn("ESP: ON", 100, function(btn)
-    Config.ESPEnabled = not Config.ESPEnabled --[cite: 5]
+    Config.ESPEnabled = not Config.ESPEnabled
     btn.Text = "ESP: " .. (Config.ESPEnabled and "ON" or "OFF")
 end)
 
@@ -116,7 +114,6 @@ end
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe or not target then return end 
     if input.KeyCode == Enum.KeyCode.Q and Config.Dash.Enabled then
-        -- Logic chặn ngắm khi dùng Side Dash (giữ A, S, D)[cite: 2]
         local movingSide = UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.D)
         if not movingSide then doAim("Root", Config.Dash.Duration) end
     elseif Config.Skills[input.KeyCode] and Config.Skills[input.KeyCode].Enabled then
@@ -128,7 +125,6 @@ RunService.RenderStepped:Connect(function()
         local headPos = target.Character.Head.Position
         local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
         if currentMethod == "Root" and root then
-            -- Bypass hoàn toàn camera góc nhìn thứ 3 (Shift Lock)[cite: 1]
             root.CFrame = CFrame.lookAt(root.Position, Vector3.new(headPos.X, root.Position.Y, headPos.Z))
         else
             Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, headPos)
@@ -154,7 +150,7 @@ task.spawn(function()
         if target and target.Character then
             nameLbl.Text = target.Name
             pcall(function() avatarImg.Image = Players:GetUserThumbnailAsync(target.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48) end)
-            if Config.ESPEnabled then --[cite: 5]
+            if Config.ESPEnabled then 
                 local hl = Instance.new("Highlight", target.Character); hl.Name = "PrimeHL"
                 hl.FillColor = Color3.new(1, 0, 0)
             end
