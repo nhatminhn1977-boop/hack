@@ -1,32 +1,42 @@
--- SCRIPT TỐI ƯU HÓA CAO ĐỘ
+-- SCRIPT HOÀN THIỆN THEO YÊU CẦU
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+local player = Players.LocalPlayer
 
--- CẤU HÌNH CÁ NHÂN: Sửa "Camera" thành "Root" nếu muốn xoay người
+-- CẤU HÌNH
 local Config = {
-    AimMethods = { [Enum.KeyCode.One] = "Camera", [Enum.KeyCode.Two] = "Camera", [Enum.KeyCode.Three] = "Camera", [Enum.KeyCode.Four] = "Camera", [Enum.KeyCode.R] = "Camera" },
-    DashMethod = "Root",
+    -- Tùy chỉnh: "Camera" (Xoay cam) hoặc "Root" (Xoay người)
+    SkillMethods = { [Enum.KeyCode.One]="Camera", [Enum.KeyCode.Two]="Camera", [Enum.KeyCode.Three]="Camera", [Enum.KeyCode.Four]="Camera", [Enum.KeyCode.R]="Camera" },
     ESP = true
 }
 
 local target = nil
 local isLocking = false
-local currentMethod = "Camera"
+local currentMode = "Camera" -- Camera hoặc Root
 
--- Tạo UI cơ bản nhất để tránh lỗi
+-- UI TỐI GIẢN (KHÔNG LỖI FONT)
 local gui = Instance.new("ScreenGui", player.PlayerGui)
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 200, 0, 150); frame.Position = UDim2.new(0.05, 0, 0.3, 0); frame.BackgroundColor3 = Color3.new(0,0,0)
+frame.Size = UDim2.new(0, 220, 0, 350); frame.Position = UDim2.new(0.05, 0, 0.2, 0); frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.Active = true; frame.Draggable = true
-local avatar = Instance.new("ImageLabel", frame); avatar.Size = UDim2.new(0, 50, 0, 50); avatar.Position = UDim2.new(0, 5, 0, 5)
-local name = Instance.new("TextLabel", frame); name.Size = UDim2.new(0, 100, 0, 50); name.Position = UDim2.new(0, 60, 0, 5); name.TextColor3 = Color3.new(1,1,1); name.BackgroundTransparency = 1
+local avatar = Instance.new("ImageLabel", frame); avatar.Size = UDim2.new(0, 50, 0, 50); avatar.Position = UDim2.new(0.05, 0, 0.05, 0)
+local name = Instance.new("TextLabel", frame); name.Size = UDim2.new(0, 150, 0, 50); name.Position = UDim2.new(0.3, 0, 0.05, 0); name.TextColor3 = Color3.new(1,1,1); name.BackgroundTransparency = 1
 
--- Logic tìm mục tiêu
+local function addButton(text, keyCode)
+    local btn = Instance.new("TextButton", frame); btn.Size = UDim2.new(0.9, 0, 0, 35); btn.Position = UDim2.new(0.05, 0, 0, 100 + (keyCode and 40 or 0))
+    btn.Text = text
+    btn.MouseButton1Click:Connect(function()
+        Config.SkillMethods[keyCode] = (Config.SkillMethods[keyCode] == "Camera" and "Root" or "Camera")
+        btn.Text = text .. ": " .. Config.SkillMethods[keyCode]
+    end)
+end
+addButton("Skill 1", Enum.KeyCode.One); addButton("Skill R", Enum.KeyCode.R)
+
+-- LOGIC TÌM MỤC TIÊU (RESET MỖI 0.2S)
 task.spawn(function()
-    while task.wait(0.5) do
+    while task.wait(0.2) do
         local min, closest = 9999, nil
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
@@ -42,31 +52,41 @@ task.spawn(function()
     end
 end)
 
--- Logic Dash và Skill
+-- LOGIC AIM
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe or not target then return end
     
-    local method = (input.KeyCode == Enum.KeyCode.Q) and Config.DashMethod or Config.AimMethods[input.KeyCode]
-    if method then
-        currentMethod = method
-        isLocking = true
-        task.wait(input.KeyCode == Enum.KeyCode.Q and 0.4 or 0.1)
-        isLocking = false
+    -- DASH: Ưu tiên xoay người (Root) trong 0.4s, bỏ qua Shift Lock
+    if input.KeyCode == Enum.KeyCode.Q then
+        isLocking = true; currentMode = "Root"; task.wait(0.4); isLocking = false
+    -- SKILLS: Tùy chỉnh
+    elseif Config.SkillMethods[input.KeyCode] then
+        isLocking = true; currentMode = Config.SkillMethods[input.KeyCode]; task.wait(0.1); isLocking = false
     end
 end)
 
--- RenderStepped xử lý Aiming (Đè lên Shift Lock)
 RunService.RenderStepped:Connect(function()
-    if isLocking and target and target.Character and target.Character:FindFirstChild("Head") then
-        local headPos = target.Character.Head.Position
-        if currentMethod == "Root" then
-            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if root then
-                root.CFrame = CFrame.lookAt(root.Position, Vector3.new(headPos.X, root.Position.Y, headPos.Z))
-            end
-        else
-            -- Ép Camera nhìn mục tiêu, Shift Lock không thể cản được
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, headPos)
-        end
+    if not isLocking or not target or not target.Character then 
+        -- Xóa ESP nếu không aim
+        local hl = player.Character and player.Character:FindFirstChild("ESP_H") 
+        if hl then hl:Destroy() end
+        return 
+    end
+    
+    local headPos = target.Character.Head.Position
+    local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    
+    -- ESP Bôi người gần nhất
+    if not target.Character:FindFirstChild("ESP_H") then 
+        local h = Instance.new("Highlight", target.Character); h.Name = "ESP_H" 
+    end
+    
+    -- THỰC THI AIM
+    if currentMode == "Root" and root then
+        -- Xoay người (Phá Shift Lock)
+        root.CFrame = CFrame.lookAt(root.Position, Vector3.new(headPos.X, root.Position.Y, headPos.Z))
+    else
+        -- Xoay Cam
+        Camera.CFrame = CFrame.new(Camera.CFrame.Position, headPos)
     end
 end)
