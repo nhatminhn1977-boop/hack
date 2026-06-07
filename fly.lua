@@ -71,34 +71,35 @@ local function fly()
     local character = player.Character
     if not character then return end
     local hrp = character:FindFirstChild("HumanoidRootPart")
-    local humanoid = character:FindFirstChild("Humanoid")
-    if not hrp or not humanoid then return end
+    if not hrp then return end
+    
     if flyConnection then
-        subConnection = flyConnection
         flyConnection:Disconnect()
         flyConnection = nil
     end
+    
     if flying then
         local bv = Instance.new("BodyVelocity")
         bv.Name = "FlyVelocity"
         bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
         bv.Velocity = Vector3.new(0, 0, 0)
         bv.Parent = hrp
+        
         flyConnection = RunService.RenderStepped:Connect(function()
             if not flying then 
                 if flyConnection then
                     flyConnection:Disconnect()
                     flyConnection = nil
                 end
-                bv:Destroy()
+                if bv then bv:Destroy() end
                 return 
             end
             local cam = workspace.CurrentCamera
             local moveDir = Vector3.new(0, 0, 0)
-            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir += cam.CFrame.LookVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir -= cam.CFrame.LookVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir -= cam.CFrame.RightVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir += cam.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - cam.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.CFrame.RightVector end
             bv.Velocity = moveDir * speed
         end)
     else
@@ -113,14 +114,13 @@ local function ToggleFlyState()
         FlyButton.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
         FlyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
         ButtonStroke.Color = Color3.fromRGB(255, 50, 50)
-        fly()
     else
         FlyButton.Text = "FLY: OFF [E]"
         FlyButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         FlyButton.TextColor3 = Color3.fromRGB(180, 180, 180)
         ButtonStroke.Color = Color3.fromRGB(150, 40, 40)
-        fly()
     end
+    fly()
 end
 
 FlyButton.MouseButton1Click:Connect(function()
@@ -135,7 +135,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
-player.CharacterAdded:Connect(function(newCharacter)
+player.CharacterAdded:Connect(function()
     if flying then
         flying = false
         ToggleFlyState()
