@@ -4,11 +4,14 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local flying = false
-local speed = 50 
+local speed = 50
+local flyConnection = nil
+
 G2L["1"] = Instance.new("ScreenGui")
 G2L["1"].Name = "UltimateFlySystemGui"
 G2L["1"].ResetOnSpawn = false
 G2L["1"].Parent = player:WaitForChild("PlayerGui")
+
 local MainFrame = Instance.new("Frame", G2L["1"])
 MainFrame.Size = UDim2.new(0, 240, 0, 110)
 MainFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
@@ -16,20 +19,24 @@ MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true 
+
 local MainCorner = Instance.new("UICorner", MainFrame)
 MainCorner.CornerRadius = UDim.new(0, 10)
+
 local MainStroke = Instance.new("UIStroke", MainFrame)
 MainStroke.Color = Color3.fromRGB(45, 45, 45)
 MainStroke.Thickness = 1.5
+
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, -40, 0, 35)
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = EZ FLY BY MINH 🔥"
+Title.Text = "⚡ ELITE FLY SYSTEM ⚡"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextSize = 12
 Title.Font = Enum.Font.SourceSansBold
 Title.TextXAlignment = Enum.TextXAlignment.Left
+
 local MinimizeButton = Instance.new("TextButton", MainFrame)
 MinimizeButton.Size = UDim2.new(0, 25, 0, 25)
 MinimizeButton.Position = UDim2.new(1, -30, 0, 5)
@@ -39,8 +46,10 @@ MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 MinimizeButton.TextSize = 16
 MinimizeButton.Font = Enum.Font.SourceSansBold
 MinimizeButton.BorderSizePixel = 0
+
 local MinCorner = Instance.new("UICorner", MinimizeButton)
 MinCorner.CornerRadius = UDim.new(0, 5)
+
 local FlyButton = Instance.new("TextButton", MainFrame)
 FlyButton.Size = UDim2.new(0, 220, 0, 45)
 FlyButton.Position = UDim2.new(0.5, -110, 0, 45)
@@ -50,25 +59,37 @@ FlyButton.TextColor3 = Color3.fromRGB(180, 180, 180)
 FlyButton.TextSize = 14
 FlyButton.Font = Enum.Font.SourceSansBold
 FlyButton.BorderSizePixel = 0
+
 local ButtonCorner = Instance.new("UICorner", FlyButton)
 ButtonCorner.CornerRadius = UDim.new(0, 8)
+
 local ButtonStroke = Instance.new("UIStroke", FlyButton)
 ButtonStroke.Color = Color3.fromRGB(150, 40, 40)
 ButtonStroke.Thickness = 1.5
+
 local function fly()
     local character = player.Character
     if not character then return end
     local hrp = character:FindFirstChild("HumanoidRootPart")
     local humanoid = character:FindFirstChild("Humanoid")
     if not hrp or not humanoid then return end
+    if flyConnection then
+        subConnection = flyConnection
+        flyConnection:Disconnect()
+        flyConnection = nil
+    end
     if flying then
         local bv = Instance.new("BodyVelocity")
         bv.Name = "FlyVelocity"
         bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
         bv.Velocity = Vector3.new(0, 0, 0)
         bv.Parent = hrp
-        RunService.RenderStepped:Connect(function()
+        flyConnection = RunService.RenderStepped:Connect(function()
             if not flying then 
+                if flyConnection then
+                    flyConnection:Disconnect()
+                    flyConnection = nil
+                end
                 bv:Destroy()
                 return 
             end
@@ -80,8 +101,12 @@ local function fly()
             if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir += cam.CFrame.RightVector end
             bv.Velocity = moveDir * speed
         end)
+    else
+        local oldBv = hrp:FindFirstChild("FlyVelocity")
+        if oldBv then oldBv:Destroy() end
     end
 end
+
 local function ToggleFlyState()
     if flying then
         FlyButton.Text = "FLY: ACTIVE [E]"
@@ -94,31 +119,36 @@ local function ToggleFlyState()
         FlyButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         FlyButton.TextColor3 = Color3.fromRGB(180, 180, 180)
         ButtonStroke.Color = Color3.fromRGB(150, 40, 40)
+        fly()
     end
 end
+
 FlyButton.MouseButton1Click:Connect(function()
     flying = not flying
     ToggleFlyState()
 end)
+
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.E then
         flying = not flying
         ToggleFlyState()
     end
 end)
+
 player.CharacterAdded:Connect(function(newCharacter)
     if flying then
         flying = false
         ToggleFlyState()
     end
 end)
+
 local isMinimized = false
 MinimizeButton.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
     if isMinimized then
         MainFrame.Size = UDim2.new(0, 30, 0, 30)
         MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) 
-        MainStroke.Color = Color3.fromRGB(150, 40, 40)
+        MainStroke.Color = Color3.fromRGB(150, 40, 40) 
         Title.Visible = false
         FlyButton.Visible = false
         MinimizeButton.Position = UDim2.new(0, 2, 0, 2)
@@ -137,4 +167,5 @@ MinimizeButton.MouseButton1Click:Connect(function()
         MinimizeButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     end
 end)
+
 return G2L["1"]
