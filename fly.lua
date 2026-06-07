@@ -7,7 +7,7 @@ local flying = false
 local speed = 50 
 
 -- 🆔 THAY ĐỔI ID ANIMATION TẠI ĐÂY (Mặc định dưới đây là dáng bay Siêu Nhân của R15)
-local ANIMATION_ID = 4317072239 
+local ANIMATION_ID = 96276041445117
 local currentTrack = nil
 
 local function playFlyAnim(char, state)
