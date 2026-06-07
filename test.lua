@@ -22,7 +22,7 @@ G2L["1"].Name = "UltimateFlySystemGui"
 G2L["1"].ResetOnSpawn = false
 G2L["1"].Parent = player:WaitForChild("PlayerGui")
 
--- 2. Tạo Frame chính
+-- 2. Tạo Frame chính (Tông đen xám)
 local MainFrame = Instance.new("Frame", G2L["1"])
 MainFrame.Size = UDim2.new(0, 240, 0, 110)
 MainFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
@@ -49,7 +49,7 @@ Title.TextSize = 12
 Title.Font = Enum.Font.SourceSansBold
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
--- Nút Thu Gọn (Minimize Button)
+-- Nút Thu Gọn (Đặt ở góc trên bên phải của MainFrame khi mở rộng)
 local MinimizeButton = Instance.new("TextButton", MainFrame)
 MinimizeButton.Size = UDim2.new(0, 25, 0, 25)
 MinimizeButton.Position = UDim2.new(1, -30, 0, 5)
@@ -145,40 +145,55 @@ FlyButton.MouseButton1Click:Connect(function()
     ToggleFlyState()
 end)
 
--- Sự kiện Phím E
+-- Sự kiện Phím E (ĐÃ SỬA LỖI: Luôn cho phép switch kể cả khi thu nhỏ)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.E then
-        -- Chỉ cho phép ấn E khi Menu không bị thu gọn ẩn nút bấm đi
-        if FlyButton.Visible then
-            flying = not flying
-            ToggleFlyState()
-        end
+        flying = not flying
+        ToggleFlyState()
     end
 end)
 
 -- 🔄 TỰ ĐỘNG RESET CHẾ ĐỘ KHI CHẾT VÀ HỒI SINH
 player.CharacterAdded:Connect(function(newCharacter)
-    -- Nếu đang bay mà chết, ép trạng thái về false và cập nhật UI
     if flying then
         flying = false
         ToggleFlyState()
     end
 end)
 
--- 📉 TÍNH NĂNG THU GỌN MENU (MINIMIZE LOGIC)
+-- 📉 TÍNH NĂNG THU GỌN MENU (Đball biến mất, chỉ để lại dấu cộng)
 local isMinimized = false
 MinimizeButton.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
     if isMinimized then
-        -- Thu nhỏ lại thành thanh ngang
-        MainFrame.Size = UDim2.new(0, 240, 0, 35)
+        -- Thu nhỏ hoàn toàn: Biến MainFrame thành một khối vuông bằng đúng nút dấu cộng
+        MainFrame.Size = UDim2.new(0, 30, 0, 30)
+        MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Chuyển nền xám cho đồng bộ nút
+        MainStroke.Color = Color3.fromRGB(150, 40, 40) -- Viền đỏ neon mỏng quanh dấu cộng cho đẹp
+        
+        -- Ẩn tất cả các thành phần chữ và nút to đi
+        Title.Visible = false
         FlyButton.Visible = false
-        MinimizeButton.Text = "+" -- Đổi thành dấu cộng để mở lại
+        
+        -- Đưa nút thu nhỏ về vị trí chính giữa để làm dấu "+"
+        MinimizeButton.Position = UDim2.new(0, 2, 0, 2)
+        MinimizeButton.Text = "+"
+        MinimizeButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        MinimizeButton.BackgroundTransparency = 1 -- Ẩn nền nút nhỏ để nhìn liền mạch với MainFrame
     else
-        -- Mở rộng lại bình thường
+        -- Mở rộng lại bình thường như cũ
         MainFrame.Size = UDim2.new(0, 240, 0, 110)
+        MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+        MainStroke.Color = Color3.fromRGB(45, 45, 45)
+        
+        Title.Visible = true
         FlyButton.Visible = true
+        
+        -- Trả nút thu nhỏ về góc trên bên phải
+        MinimizeButton.Position = UDim2.new(1, -30, 0, 5)
         MinimizeButton.Text = "-"
+        MinimizeButton.BackgroundTransparency = 0
+        MinimizeButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     end
 end)
 
