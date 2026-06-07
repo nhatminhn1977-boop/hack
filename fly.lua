@@ -5,6 +5,50 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local flying = false
 local speed = 50 
+
+-- Biến lưu trữ Animation Track để bật/tắt
+local currentTrack = nil
+
+-- Hàm tìm và chạy Animation phù hợp của nhân vật
+local function playFlyAnim(char, state)
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+    
+    -- Nếu tắt bay, dừng animation cũ lại
+    if not state then
+        if currentTrack then
+            currentTrack:Stop()
+            currentTrack = nil
+        end
+        return
+    end
+
+    -- Tìm ID animation bơi hoặc rơi trong Animate script của nhân vật
+    local animate = char:FindFirstChild("Animate")
+    local animObject = nil
+    if animate then
+        -- Ưu tiên lấy cử động bơi (swim) nhìn như đang lướt gió, nếu không có thì lấy fall
+        local swim = animate:FindFirstChild("swim")
+        if swim and swim:FindFirstChildOfClass("Animation") then
+            animObject = swim:FindFirstChildOfClass("Animation")
+        else
+            local fall = animate:FindFirstChild("fall")
+            if fall and fall:FindFirstChildOfClass("Animation") then
+                animObject = fall:FindFirstChildOfClass("Animation")
+            end
+        end
+    end
+
+    -- Nếu tìm thấy Animation, tiến hành chạy lặp lại (Loop)
+    if animObject then
+        pcall(function()
+            currentTrack = humanoid:LoadAnimation(animObject)
+            currentTrack.Looped = true
+            currentTrack:Play()
+        end)
+    end
+end
+
 G2L["1"] = Instance.new("ScreenGui")
 G2L["1"].Name = "UltimateFlySystemGui"
 G2L["1"].ResetOnSpawn = false
@@ -83,17 +127,20 @@ local function fly()
     end
 end
 local function ToggleFlyState()
+    local character = player.Character
     if flying then
         FlyButton.Text = "FLY: ACTIVE [E]"
         FlyButton.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
         FlyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
         ButtonStroke.Color = Color3.fromRGB(255, 50, 50)
         fly()
+        if character then playFlyAnim(character, true) end
     else
         FlyButton.Text = "FLY: OFF [E]"
         FlyButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         FlyButton.TextColor3 = Color3.fromRGB(180, 180, 180)
         ButtonStroke.Color = Color3.fromRGB(150, 40, 40)
+        if character then playFlyAnim(character, false) end
     end
 end
 FlyButton.MouseButton1Click:Connect(function()
