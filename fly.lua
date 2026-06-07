@@ -1,3 +1,4 @@
+local G2L = {}
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -136,3 +137,4 @@ MinimizeButton.MouseButton1Click:Connect(function()
         MinimizeButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     end
 end)
+return G2L["1"]
