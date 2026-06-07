@@ -14,16 +14,15 @@ local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local flying = false
-local speed = 50 
+local speed = 50 -- Tốc độ bay gốc của bạn
 
--- Biến toàn cục để quản lý kết nối vòng lặp RenderStepped
-local flyConnection = nil
-
+-- 1. Khởi tạo ScreenGui
 G2L["1"] = Instance.new("ScreenGui")
 G2L["1"].Name = "UltimateFlySystemGui"
 G2L["1"].ResetOnSpawn = false
 G2L["1"].Parent = player:WaitForChild("PlayerGui")
 
+-- 2. Tạo Frame chính (Tông đen xám)
 local MainFrame = Instance.new("Frame", G2L["1"])
 MainFrame.Size = UDim2.new(0, 240, 0, 110)
 MainFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
@@ -39,6 +38,7 @@ local MainStroke = Instance.new("UIStroke", MainFrame)
 MainStroke.Color = Color3.fromRGB(45, 45, 45)
 MainStroke.Thickness = 1.5
 
+-- Tiêu đề Menu
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, -40, 0, 35)
 Title.Position = UDim2.new(0, 10, 0, 0)
@@ -49,6 +49,7 @@ Title.TextSize = 12
 Title.Font = Enum.Font.SourceSansBold
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
+-- Nút Thu Gọn (Đặt ở góc trên bên phải của MainFrame khi mở rộng)
 local MinimizeButton = Instance.new("TextButton", MainFrame)
 MinimizeButton.Size = UDim2.new(0, 25, 0, 25)
 MinimizeButton.Position = UDim2.new(1, -30, 0, 5)
@@ -62,6 +63,7 @@ MinimizeButton.BorderSizePixel = 0
 local MinCorner = Instance.new("UICorner", MinimizeButton)
 MinCorner.CornerRadius = UDim.new(0, 5)
 
+-- 3. NÚT BẬT/TẮT BAY
 local FlyButton = Instance.new("TextButton", MainFrame)
 FlyButton.Size = UDim2.new(0, 220, 0, 45)
 FlyButton.Position = UDim2.new(0.5, -110, 0, 45)
@@ -80,8 +82,9 @@ ButtonStroke.Color = Color3.fromRGB(150, 40, 40)
 ButtonStroke.Thickness = 1.5
 
 -- =======================================================
--- HÀM XỬ LÝ BAY (ĐÃ FIX LỖI KẸT KẾT NỐI RENDERSTEPPED)
+-- HÀM XỬ LÝ BAY (GIỮ NGUYÊN 100% CỐT LÕI CỦA BẠN)
 -- =======================================================
+
 local function fly()
     local character = player.Character
     if not character then return end
@@ -90,12 +93,6 @@ local function fly()
     local humanoid = character:FindFirstChild("Humanoid")
     if not hrp or not humanoid then return end
 
-    -- Ngắt kết nối cũ nếu có trước khi tạo kết nối mới (Tránh trùng lặp)
-    if flyConnection then
-        flyConnection:Disconnect()
-        flyConnection = nil
-    end
-
     if flying then
         local bv = Instance.new("BodyVelocity")
         bv.Name = "FlyVelocity"
@@ -103,14 +100,9 @@ local function fly()
         bv.Velocity = Vector3.new(0, 0, 0)
         bv.Parent = hrp
         
-        -- Gán kết nối vào biến toàn cục flyConnection
-        flyConnection = RunService.RenderStepped:Connect(function()
+        RunService.RenderStepped:Connect(function()
             if not flying then 
-                if flyConnection then
-                    flyConnection:Disconnect() -- Dừng vòng lặp hẳn trên hệ thống
-                    flyConnection = nil
-                end
-                bv:Destroy() -- Xóa bỏ lực bay
+                bv:Destroy()
                 return 
             end
             
@@ -124,16 +116,14 @@ local function fly()
             
             bv.Velocity = moveDir * speed
         end)
-    else
-        -- Trường hợp tắt bay đột ngột (hoặc gọi thủ công), dọn dẹp các BodyVelocity cũ còn sót
-        local oldBv = hrp:FindFirstChild("FlyVelocity")
-        if oldBv then oldBv:Destroy() end
     end
 end
 
 -- =======================================================
--- ĐỒNG BỘ TRẠNG THÁI GIAO DIỆN
+-- HỆ THỐNG ĐỒNG BỘ TRẠNG THÁI VÀ CHỨC NĂNG NÂNG CẤP
 -- =======================================================
+
+-- Hàm cập nhật giao diện trực quan theo trạng thái
 local function ToggleFlyState()
     if flying then
         FlyButton.Text = "FLY: ACTIVE [E]"
@@ -146,15 +136,16 @@ local function ToggleFlyState()
         FlyButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         FlyButton.TextColor3 = Color3.fromRGB(180, 180, 180)
         ButtonStroke.Color = Color3.fromRGB(150, 40, 40)
-        fly() -- Chạy lại một lần nữa để xử lý phần xóa lực cũ ở nhánh else
     end
 end
 
+-- Sự kiện Click Nút Fly trên UI
 FlyButton.MouseButton1Click:Connect(function()
     flying = not flying
     ToggleFlyState()
 end)
 
+-- Sự kiện Phím E (ĐÃ SỬA LỖI: Luôn cho phép switch kể cả khi thu nhỏ)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.E then
         flying = not flying
@@ -162,6 +153,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
+-- 🔄 TỰ ĐỘNG RESET CHẾ ĐỘ KHI CHẾT VÀ HỒI SINH
 player.CharacterAdded:Connect(function(newCharacter)
     if flying then
         flying = false
@@ -169,28 +161,35 @@ player.CharacterAdded:Connect(function(newCharacter)
     end
 end)
 
--- =======================================================
--- LOGIC THU NHỎ (MINIMIZE LOGIC)
--- =======================================================
+-- 📉 TÍNH NĂNG THU GỌN MENU (Đball biến mất, chỉ để lại dấu cộng)
 local isMinimized = false
 MinimizeButton.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
     if isMinimized then
+        -- Thu nhỏ hoàn toàn: Biến MainFrame thành một khối vuông bằng đúng nút dấu cộng
         MainFrame.Size = UDim2.new(0, 30, 0, 30)
-        MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) 
-        MainStroke.Color = Color3.fromRGB(150, 40, 40) 
+        MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Chuyển nền xám cho đồng bộ nút
+        MainStroke.Color = Color3.fromRGB(150, 40, 40) -- Viền đỏ neon mỏng quanh dấu cộng cho đẹp
+        
+        -- Ẩn tất cả các thành phần chữ và nút to đi
         Title.Visible = false
         FlyButton.Visible = false
+        
+        -- Đưa nút thu nhỏ về vị trí chính giữa để làm dấu "+"
         MinimizeButton.Position = UDim2.new(0, 2, 0, 2)
         MinimizeButton.Text = "+"
         MinimizeButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        MinimizeButton.BackgroundTransparency = 1 
+        MinimizeButton.BackgroundTransparency = 1 -- Ẩn nền nút nhỏ để nhìn liền mạch với MainFrame
     else
+        -- Mở rộng lại bình thường như cũ
         MainFrame.Size = UDim2.new(0, 240, 0, 110)
         MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
         MainStroke.Color = Color3.fromRGB(45, 45, 45)
+        
         Title.Visible = true
         FlyButton.Visible = true
+        
+        -- Trả nút thu nhỏ về góc trên bên phải
         MinimizeButton.Position = UDim2.new(1, -30, 0, 5)
         MinimizeButton.Text = "-"
         MinimizeButton.BackgroundTransparency = 0
