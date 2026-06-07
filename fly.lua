@@ -6,15 +6,14 @@ local player = Players.LocalPlayer
 local flying = false
 local speed = 50 
 
--- Biến lưu trữ Animation Track để bật/tắt
+-- 🆔 THAY ĐỔI ID ANIMATION TẠI ĐÂY (Mặc định dưới đây là dáng bay Siêu Nhân của R15)
+local ANIMATION_ID = 4317072239 
 local currentTrack = nil
 
--- Hàm tìm và chạy Animation phù hợp của nhân vật
 local function playFlyAnim(char, state)
     local humanoid = char:FindFirstChildOfClass("Humanoid")
     if not humanoid then return end
     
-    -- Nếu tắt bay, dừng animation cũ lại
     if not state then
         if currentTrack then
             currentTrack:Stop()
@@ -23,30 +22,17 @@ local function playFlyAnim(char, state)
         return
     end
 
-    -- Tìm ID animation bơi hoặc rơi trong Animate script của nhân vật
-    local animate = char:FindFirstChild("Animate")
-    local animObject = nil
-    if animate then
-        -- Ưu tiên lấy cử động bơi (swim) nhìn như đang lướt gió, nếu không có thì lấy fall
-        local swim = animate:FindFirstChild("swim")
-        if swim and swim:FindFirstChildOfClass("Animation") then
-            animObject = swim:FindFirstChildOfClass("Animation")
-        else
-            local fall = animate:FindFirstChild("fall")
-            if fall and fall:FindFirstChildOfClass("Animation") then
-                animObject = fall:FindFirstChildOfClass("Animation")
-            end
-        end
-    end
+    if currentTrack then currentTrack:Stop() end
 
-    -- Nếu tìm thấy Animation, tiến hành chạy lặp lại (Loop)
-    if animObject then
-        pcall(function()
-            currentTrack = humanoid:LoadAnimation(animObject)
-            currentTrack.Looped = true
-            currentTrack:Play()
-        end)
-    end
+    local anim = Instance.new("Animation")
+    anim.AnimationId = "rbxassetid://" .. tostring(ANIMATION_ID)
+    
+    pcall(function()
+        currentTrack = humanoid:LoadAnimation(anim)
+        currentTrack.Looped = true
+        currentTrack.Priority = Enum.AnimationPriority.Movement
+        currentTrack:Play()
+    end)
 end
 
 G2L["1"] = Instance.new("ScreenGui")
@@ -171,17 +157,4 @@ MinimizeButton.MouseButton1Click:Connect(function()
         MinimizeButton.Position = UDim2.new(0, 2, 0, 2)
         MinimizeButton.Text = "+"
         MinimizeButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        MinimizeButton.BackgroundTransparency = 1 
-    else
-        MainFrame.Size = UDim2.new(0, 240, 0, 110)
-        MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-        MainStroke.Color = Color3.fromRGB(45, 45, 45)
-        Title.Visible = true
-        FlyButton.Visible = true
-        MinimizeButton.Position = UDim2.new(1, -30, 0, 5)
-        MinimizeButton.Text = "-"
-        MinimizeButton.BackgroundTransparency = 0
-        MinimizeButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    end
-end)
-return G2L["1"]
+        MinimizeButton.BackgroundTransparency = 1
