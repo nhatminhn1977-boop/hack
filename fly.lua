@@ -5,15 +5,11 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local flying = false
 local speed = 50 
-
--- 🆔 THAY ĐỔI ID ANIMATION TẠI ĐÂY (Mặc định dưới đây là dáng bay Siêu Nhân của R15)
 local ANIMATION_ID = 96276041445117
 local currentTrack = nil
-
 local function playFlyAnim(char, state)
     local humanoid = char:FindFirstChildOfClass("Humanoid")
     if not humanoid then return end
-    
     if not state then
         if currentTrack then
             currentTrack:Stop()
@@ -21,7 +17,6 @@ local function playFlyAnim(char, state)
         end
         return
     end
-
     if currentTrack then currentTrack:Stop() end
 
     local anim = Instance.new("Animation")
@@ -34,7 +29,6 @@ local function playFlyAnim(char, state)
         currentTrack:Play()
     end)
 end
-
 G2L["1"] = Instance.new("ScreenGui")
 G2L["1"].Name = "UltimateFlySystemGui"
 G2L["1"].ResetOnSpawn = false
@@ -55,7 +49,7 @@ local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, -40, 0, 35)
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "⚡ ELITE FLY SYSTEM ⚡"
+Title.Text = "EZ FLY BY MINH 🔥"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextSize = 12
 Title.Font = Enum.Font.SourceSansBold
