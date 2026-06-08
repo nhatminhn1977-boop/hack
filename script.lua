@@ -147,13 +147,51 @@ for _, key in ipairs({Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, En
     skillY = skillY + 35
 end
 
+-- FIX CHI TIẾT: Hàm cưỡng chế đổi sang mục tiêu gần nhất LẬP TỨC
 local function forceResetTarget()
-    target = nil
-    nameLbl.Text = "No Target"
-    avatarImg.Image = ""
+    -- 1. Xóa toàn bộ Highlight cũ ngay tức thì
     for _, p in pairs(Players:GetPlayers()) do
         local oldHl = p.Character and p.Character:FindFirstChild("PrimeHL")
         if oldHl then oldHl:Destroy() end
+    end
+
+    local myChar = player.Character
+    local myHead = myChar and myChar:FindFirstChild("Head")
+    local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
+
+    -- Nếu bản thân đang chết thì dọn dẹp rồi nghỉ quét
+    if not myHead or (myHum and myHum.Health <= 0) then
+        target = nil
+        nameLbl.Text = "No Target"
+        avatarImg.Image = ""
+        return
+    end
+
+    -- 2. Thực hiện quét tìm người gần nhất ngay lập tức (Không đợi vòng lặp)
+    local closest, min = nil, 9999
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
+            local pHum = p.Character:FindFirstChildOfClass("Humanoid")
+            if pHum and pHum.Health > 0 then
+                local d = (p.Character.Head.Position - myHead.Position).Magnitude
+                if d < min then min = d; closest = p end
+            end
+        end
+    end
+    
+    target = closest
+
+    -- 3. Cập nhật giao diện và ESP ngay lập tức trong cùng 1 frame
+    if target and target.Character and target.Character:FindFirstChild("Head") then
+        nameLbl.Text = target.Name
+        pcall(function() avatarImg.Image = Players:GetUserThumbnailAsync(target.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48) end)
+        if Config.ESPEnabled then 
+            local hl = Instance.new("Highlight", target.Character); hl.Name = "PrimeHL"
+            hl.FillColor = Color3.new(1, 0, 0)
+        end
+    else
+        nameLbl.Text = "No Target"
+        avatarImg.Image = ""
     end
 end
 
@@ -196,7 +234,6 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 end)
 
 RunService.RenderStepped:Connect(function()
-    -- Kiểm tra kỹ mục tiêu và bản thân có đầy đủ bộ phận không mới Aim
     if isLocking and target and target.Character and target.Character:FindFirstChild("Head") and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         local headPos = target.Character.Head.Position
         local root = player.Character.HumanoidRootPart
@@ -210,16 +247,13 @@ end)
 
 task.spawn(function()
     while task.wait(0.2) do
-        -- ĐÃ FIX: Lấy thông tin nhân vật hiện tại của bản thân một cách an toàn
         local myChar = player.Character
         local myHead = myChar and myChar:FindFirstChild("Head")
         local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
 
-        -- Nếu bản thân đang chết hoặc chưa load xong nhân vật thì xóa mục tiêu hiện tại và bỏ qua lượt quét này
         if not myHead or (myHum and myHum.Health <= 0) then
             target = nil
         else
-            -- Kiểm tra xem mục tiêu cũ còn hợp lệ và còn sống không
             local targetHum = target and target.Character and target.Character:FindFirstChildOfClass("Humanoid")
             local targetDead = targetHum and targetHum.Health <= 0
 
@@ -228,7 +262,6 @@ task.spawn(function()
                 for _, p in pairs(Players:GetPlayers()) do
                     if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
                         local pHum = p.Character:FindFirstChildOfClass("Humanoid")
-                        -- ĐÃ FIX: Chỉ quét những người chơi còn sống (Health > 0)
                         if pHum and pHum.Health > 0 then
                             local d = (p.Character.Head.Position - myHead.Position).Magnitude
                             if d < min then min = d; closest = p end
@@ -239,13 +272,11 @@ task.spawn(function()
             end
         end
         
-        -- Dọn dẹp Highlight cũ
         for _, p in pairs(Players:GetPlayers()) do
             local oldHl = p.Character and p.Character:FindFirstChild("PrimeHL")
             if oldHl then oldHl:Destroy() end
         end
 
-        -- Cập nhật giao diện và ESP
         if target and target.Character and target.Character:FindFirstChild("Head") then
             nameLbl.Text = target.Name
             pcall(function() avatarImg.Image = Players:GetUserThumbnailAsync(target.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48) end)
