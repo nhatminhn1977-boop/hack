@@ -26,7 +26,7 @@ local gui = Instance.new("ScreenGui", player.PlayerGui)
 gui.ResetOnSpawn = false
 
 local mainFrame = Instance.new("Frame", gui)
-mainFrame.Size = UDim2.new(0, 260, 0, 460) -- ĐÃ TĂNG: Từ 425 lên 460 để vừa nút mới
+mainFrame.Size = UDim2.new(0, 260, 0, 460)
 mainFrame.Position = UDim2.new(0.05, 0, 0.15, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 mainFrame.Active = true
@@ -87,7 +87,7 @@ minBtn.MouseButton1Click:Connect(function()
         mainFrame.Size = UDim2.new(0, 260, 0, 35)
         minBtn.Text = "Mở rộng UI"
     else
-        mainFrame.Size = UDim2.new(0, 260, 0, 460) -- ĐÃ SỬA: Đồng bộ kích thước mở rộng mới
+        mainFrame.Size = UDim2.new(0, 260, 0, 460)
         minBtn.Text = "Rút gọn UI"
     end
 end)
@@ -147,26 +147,23 @@ for _, key in ipairs({Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, En
     skillY = skillY + 35
 end
 
--- Hàm xử lý dọn dẹp và reset mục tiêu
 local function forceResetTarget()
     target = nil
     nameLbl.Text = "No Target"
     avatarImg.Image = ""
-    -- Xóa Highlight của mục tiêu cũ ngay lập tức để tránh lỗi hiển thị
     for _, p in pairs(Players:GetPlayers()) do
         local oldHl = p.Character and p.Character:FindFirstChild("PrimeHL")
         if oldHl then oldHl:Destroy() end
     end
 end
 
--- THÊM MỚI: Nút Reset Aimed Player trên UI (Tọa độ Y = 355)
 createMainBtn("Reset Current Aim (Phím X)", 355, function(btn)
     forceResetTarget()
 end)
 
 local creditLbl = Instance.new("TextLabel", contentFrame)
 creditLbl.Size = UDim2.new(1, 0, 0, 20)
-creditLbl.Position = UDim2.new(0, 0, 0, 395) -- ĐÃ DỊCH XUỐNG: Từ 360 xuống 395 để nhường chỗ cho nút mới
+creditLbl.Position = UDim2.new(0, 0, 0, 395)
 creditLbl.TextColor3 = Color3.fromRGB(120, 120, 120)
 creditLbl.BackgroundTransparency = 1
 creditLbl.TextSize = 12
@@ -183,8 +180,6 @@ end
 
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe then return end
-    
-    -- THÊM MỚI: Phím cơ ép Reset Target (Bấm nút X trên bàn phím)
     if input.KeyCode == Enum.KeyCode.X then
         forceResetTarget()
         return
@@ -201,10 +196,11 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 end)
 
 RunService.RenderStepped:Connect(function()
-    if isLocking and target and target.Character:FindFirstChild("Head") then
+    -- Kiểm tra kỹ mục tiêu và bản thân có đầy đủ bộ phận không mới Aim
+    if isLocking and target and target.Character and target.Character:FindFirstChild("Head") and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         local headPos = target.Character.Head.Position
-        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        if currentMethod == "Root" and root then
+        local root = player.Character.HumanoidRootPart
+        if currentMethod == "Root" then
             root.CFrame = CFrame.lookAt(root.Position, Vector3.new(headPos.X, root.Position.Y, headPos.Z))
         else
             Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, headPos)
@@ -214,23 +210,43 @@ end)
 
 task.spawn(function()
     while task.wait(0.2) do
-        if not Config.LockTarget or not target or not target.Parent then
-            local closest, min = nil, 9999
-            for _, p in pairs(Players:GetPlayers()) do
-                if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
-                    local d = (p.Character.Head.Position - player.Character.Head.Position).Magnitude
-                    if d < min then min = d; closest = p end
+        -- ĐÃ FIX: Lấy thông tin nhân vật hiện tại của bản thân một cách an toàn
+        local myChar = player.Character
+        local myHead = myChar and myChar:FindFirstChild("Head")
+        local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
+
+        -- Nếu bản thân đang chết hoặc chưa load xong nhân vật thì xóa mục tiêu hiện tại và bỏ qua lượt quét này
+        if not myHead or (myHum and myHum.Health <= 0) then
+            target = nil
+        else
+            -- Kiểm tra xem mục tiêu cũ còn hợp lệ và còn sống không
+            local targetHum = target and target.Character and target.Character:FindFirstChildOfClass("Humanoid")
+            local targetDead = targetHum and targetHum.Health <= 0
+
+            if not Config.LockTarget or not target or not target.Parent or not target.Character or not target.Character:FindFirstChild("Head") or targetDead then
+                local closest, min = nil, 9999
+                for _, p in pairs(Players:GetPlayers()) do
+                    if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
+                        local pHum = p.Character:FindFirstChildOfClass("Humanoid")
+                        -- ĐÃ FIX: Chỉ quét những người chơi còn sống (Health > 0)
+                        if pHum and pHum.Health > 0 then
+                            local d = (p.Character.Head.Position - myHead.Position).Magnitude
+                            if d < min then min = d; closest = p end
+                        end
+                    end
                 end
+                target = closest
             end
-            target = closest
         end
         
+        -- Dọn dẹp Highlight cũ
         for _, p in pairs(Players:GetPlayers()) do
             local oldHl = p.Character and p.Character:FindFirstChild("PrimeHL")
             if oldHl then oldHl:Destroy() end
         end
 
-        if target and target.Character then
+        -- Cập nhật giao diện và ESP
+        if target and target.Character and target.Character:FindFirstChild("Head") then
             nameLbl.Text = target.Name
             pcall(function() avatarImg.Image = Players:GetUserThumbnailAsync(target.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48) end)
             if Config.ESPEnabled then 
