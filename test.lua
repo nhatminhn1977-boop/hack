@@ -18,7 +18,7 @@ local Config = {
 }
 
 -- ====================================================================
--- 🔥 HỆ THỐNG QUẢN LÝ PROFILE CONFIG (NEW)
+-- 🔥 HỆ THỐNG QUẢN LÝ PROFILE CONFIG (ĐÃ SỬA LỖI ĐỒNG BỘ)
 -- ====================================================================
 local CurrentSelectedProfile = 1
 local Profiles = {
@@ -26,7 +26,6 @@ local Profiles = {
     [2] = { Name = "Profile 2", Data = nil }
 }
 
--- Hàm deep copy để sao lưu dữ liệu tránh bị dính tham chiếu (reference pointer)
 local function deepCopy(original)
     local copy = {}
     for k, v in pairs(original) do
@@ -39,7 +38,6 @@ local function deepCopy(original)
     return copy
 end
 
--- Khởi tạo sẵn dữ liệu mặc định ban đầu cho cả 2 Profile
 Profiles[1].Data = deepCopy(Config)
 Profiles[2].Data = deepCopy(Config)
 -- ====================================================================
@@ -54,7 +52,7 @@ local gui = Instance.new("ScreenGui", player.PlayerGui)
 gui.ResetOnSpawn = false
 
 local mainFrame = Instance.new("Frame", gui)
-mainFrame.Size = UDim2.new(0, 280, 0, 520) -- Tăng chiều cao từ 480 lên 520 để có chỗ cho cụm nút Config
+mainFrame.Size = UDim2.new(0, 280, 0, 520)
 mainFrame.Position = UDim2.new(0.05, 0, 0.15, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 mainFrame.BorderSizePixel = 0
@@ -136,7 +134,7 @@ minBtn.MouseButton1Click:Connect(function()
         mainFrame.Size = UDim2.new(0, 280, 0, 40)
         minBtn.Text = "✨ NHẬT MINH HUB | Mở rộng UI"
     else
-        mainFrame.Size = UDim2.new(0, 280, 0, 520) -- Đồng bộ mở rộng theo chiều cao mới
+        mainFrame.Size = UDim2.new(0, 280, 0, 520)
         minBtn.Text = "✨ NHẬT MINH HUB | Rút gọn UI"
     end
 end)
@@ -180,9 +178,8 @@ local function updateButtonVisual(btn, state, activeText, inactiveText)
     end
 end
 
--- Định nghĩa trước các biến lưu Button để hàm Load Config có thể gọi cập nhật giao diện trực quan
 local lockTargetBtn, espBtn, dashBtn
-local skillUIReferences = {} -- Bảng lưu các nút Skill để làm mới UI khi load config
+local skillUIReferences = {}
 
 local function createMainBtn(text, y, callback, isActiveInit)
     local btn = Instance.new("TextButton", contentFrame)
@@ -221,7 +218,6 @@ end, Config.Dash.Enabled)
 -- HỆ THỐNG NÚT ĐIỀU CHỈNH SKILLS TRỰC QUAN
 local skillY = 188
 for _, key in ipairs({Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four, Enum.KeyCode.R}) do
-    local skill = Config.Skills[key]
     
     local toggleBtn = Instance.new("TextButton", contentFrame)
     toggleBtn.Size = UDim2.new(0.42, 0, 0, 30)
@@ -235,8 +231,10 @@ for _, key in ipairs({Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, En
     local tStroke = Instance.new("UIStroke", toggleBtn)
     tStroke.Thickness = 1
     
+    -- SỬA LỖI: Luôn đọc trực tiếp từ Config hiện tại, không dùng biến con trỏ cũ
     local function updateSkillToggleVisual()
-        if skill.Enabled then
+        local currentSkill = Config.Skills[key]
+        if currentSkill.Enabled then
             toggleBtn.BackgroundColor3 = Color3.fromRGB(10, 135, 84)
             toggleBtn.Text = "🔥 Skill " .. key.Name .. ": ON"
             tStroke.Color = Color3.fromRGB(46, 204, 113)
@@ -246,10 +244,9 @@ for _, key in ipairs({Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, En
             tStroke.Color = Color3.fromRGB(120, 40, 40)
         end
     end
-    updateSkillToggleVisual()
     
     toggleBtn.MouseButton1Click:Connect(function()
-        skill.Enabled = not skill.Enabled
+        Config.Skills[key].Enabled = not Config.Skills[key].Enabled
         updateSkillToggleVisual()
     end)
     
@@ -265,9 +262,11 @@ for _, key in ipairs({Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, En
     local mStroke = Instance.new("UIStroke", modeBtn)
     mStroke.Thickness = 1
     
+    -- SỬA LỖI: Luôn đọc trực tiếp từ Config hiện tại
     local function updateSkillModeVisual()
-        modeBtn.Text = "🎬 " .. skill.Method
-        if skill.Method == "Camera" then
+        local currentSkill = Config.Skills[key]
+        modeBtn.Text = "🎬 " .. currentSkill.Method
+        if currentSkill.Method == "Camera" then
             modeBtn.BackgroundColor3 = Color3.fromRGB(142, 68, 173)
             mStroke.Color = Color3.fromRGB(165, 105, 189)
         else
@@ -275,14 +274,16 @@ for _, key in ipairs({Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, En
             mStroke.Color = Color3.fromRGB(230, 126, 34)
         end
     end
-    updateSkillModeVisual()
     
     modeBtn.MouseButton1Click:Connect(function()
-        skill.Method = (skill.Method == "Camera" and "Root" or "Camera") 
+        Config.Skills[key].Method = (Config.Skills[key].Method == "Camera" and "Root" or "Camera") 
         updateSkillModeVisual()
     end)
     
-    -- Lưu lại reference để hệ thống Load Config có thể ép cập nhật giao diện
+    -- Gọi khởi tạo ban đầu
+    updateSkillToggleVisual()
+    updateSkillModeVisual()
+    
     skillUIReferences[key] = {
         UpdateToggle = updateSkillToggleVisual,
         UpdateMode = updateSkillModeVisual
@@ -292,11 +293,11 @@ for _, key in ipairs({Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, En
 end
 
 -- ====================================================================
--- 📦 KHỞI TẠO KHU VỰC ĐIỀU KHIỂN CONFIG VÀ LOADOUT (NEW)
+-- 📦 KHỞI TẠO KHU VỰC ĐIỀU KHIỂN CONFIG VÀ LOADOUT
 -- ====================================================================
 local configFrame = Instance.new("Frame", contentFrame)
 configFrame.Size = UDim2.new(0.88, 0, 0, 32)
-configFrame.Position = UDim2.new(0.06, 0, 0, 375) -- Đẩy vùng kĩ năng cũ xuống một chút
+configFrame.Position = UDim2.new(0.06, 0, 0, 375)
 configFrame.BackgroundTransparency = 1
 
 local profileBtn = Instance.new("TextButton", configFrame)
@@ -313,7 +314,6 @@ pCorner.CornerRadius = UDim.new(0, 6)
 local pStroke = Instance.new("UIStroke", profileBtn)
 pStroke.Color = Color3.fromRGB(99, 110, 114)
 
--- Click để đổi nhanh giữa Profile 1 và Profile 2 qua lại công khai
 profileBtn.MouseButton1Click:Connect(function()
     CurrentSelectedProfile = (CurrentSelectedProfile == 1 and 2 or 1)
     profileBtn.Text = "📁 " .. Profiles[CurrentSelectedProfile].Name
@@ -331,7 +331,6 @@ saveConfigBtn.Text = "💾 LƯU"
 local sCorner = Instance.new("UICorner", saveConfigBtn)
 sCorner.CornerRadius = UDim.new(0, 6)
 
--- Xử lý chức năng Lưu tất cả các nút hiện tại vào bộ nhớ Profile đang chọn
 saveConfigBtn.MouseButton1Click:Connect(function()
     Profiles[CurrentSelectedProfile].Data = deepCopy(Config)
     
@@ -354,18 +353,17 @@ loadConfigBtn.Text = "🔌 TẢI"
 local lCorner = Instance.new("UICorner", loadConfigBtn)
 lCorner.CornerRadius = UDim.new(0, 6)
 
--- Xử lý chức năng Tải cấu hình từ Profile ra và ép đồng bộ lại giao diện UI trực quan
 loadConfigBtn.MouseButton1Click:Connect(function()
     local savedData = Profiles[CurrentSelectedProfile].Data
     if savedData then
         Config = deepCopy(savedData)
         
-        -- Làm mới trạng thái giao diện của 3 nút tính năng chính
+        -- Cập nhật giao diện nút tính năng chính
         updateButtonVisual(lockTargetBtn, Config.LockTarget, "🔒 Lock Target: ON", "🔒 Lock Target: OFF")
         updateButtonVisual(espBtn, Config.ESPEnabled, "👁️ ESP NEAREST: ON", "👁️ ESP NEAREST: OFF")
         updateButtonVisual(dashBtn, Config.Dash.Enabled, "⚡ Auto Aim Dash: ON", "⚡ Auto Aim Dash: OFF")
         
-        -- Duyệt vòng lặp làm mới toàn bộ chữ viết và màu sắc của 5 nút Skill
+        -- Ép cập nhật lại toàn bộ nút Skill theo dữ liệu vừa load
         for _, key in ipairs({Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four, Enum.KeyCode.R}) do
             if skillUIReferences[key] then
                 skillUIReferences[key].UpdateToggle()
@@ -426,7 +424,7 @@ local function forceResetTarget()
     end
 end
 
--- NÚT RESET SANG TRỌNG Ở DƯỚI CÙNG (Hạ thấp Y xuống 415 do chèn cụm nút Config)
+-- NÚT RESET SANG TRỌNG Ở DƯỚI CÙNG
 local resetBtn = Instance.new("TextButton", contentFrame)
 resetBtn.Size = UDim2.new(0.88, 0, 0, 34)
 resetBtn.Position = UDim2.new(0.06, 0, 0, 415)
@@ -448,14 +446,14 @@ end)
 
 local creditLbl = Instance.new("TextLabel", contentFrame)
 creditLbl.Size = UDim2.new(1, 0, 0, 20)
-creditLbl.Position = UDim2.new(0, 0, 0, 455) -- Hạ thấp Y xuống 455 để cân bằng khoảng cách đáy
+creditLbl.Position = UDim2.new(0, 0, 0, 455)
 creditLbl.TextColor3 = Color3.fromRGB(150, 150, 160)
 creditLbl.BackgroundTransparency = 1
 creditLbl.Font = Enum.Font.Gotham
 creditLbl.TextSize = 11
 creditLbl.Text = "💎 Script by Nhật Minh 1602 💎" 
 
--- LOGIC CORE VÀ VÒNG LẶP (ĐƯỢC GIỮ NGUYÊN HOÀN HẢO)
+-- LOGIC CORE VÀ VÒNG LẶP (ĐƯỢC GIỮ NGUYÊN HOÀN HẢO THEO YÊU CẦU)
 local function doAim(method, duration)
     isLocking = true; currentMethod = method
     local hum = player.Character and player.Character:FindFirstChild("Humanoid")
