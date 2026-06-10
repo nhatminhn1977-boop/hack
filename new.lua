@@ -17,7 +17,7 @@ local Config = {
     ESPEnabled = true 
 }
 
--- Mảng chứa thứ tự phím để xử lý chuỗi Code dễ dàng hơn
+-- Mảng chứa thứ tự phím
 local skillKeys = {Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four, Enum.KeyCode.R}
 
 local function deepCopy(original)
@@ -33,13 +33,12 @@ local function deepCopy(original)
 end
 
 -- ====================================================================
--- 🔥 HỆ THỐNG QUẢN LÝ PROFILE CONFIG MỚI
+-- 🔥 HỆ THỐNG QUẢN LÝ PROFILE CONFIG
 -- ====================================================================
 local CurrentSelectedProfile = 1
 local Profiles = {
     [1] = { Name = "Default", Data = deepCopy(Config) }
 }
--- ====================================================================
 
 local target = nil
 local isLocking = false
@@ -66,7 +65,7 @@ mainStroke.Color = Color3.fromRGB(0, 180, 216)
 mainStroke.Thickness = 1.5
 mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
--- THANH TIÊU ĐỀ (TOP BAR) - ĐÃ CẬP NHẬT KÉO THẢ MƯỢT MÀ
+-- THANH TIÊU ĐỀ
 local topBar = Instance.new("Frame", mainFrame)
 topBar.Size = UDim2.new(1, 0, 0, 40)
 topBar.BackgroundColor3 = Color3.fromRGB(28, 28, 35)
@@ -82,7 +81,7 @@ topBarPatch.Position = UDim2.new(0, 0, 1, -10)
 topBarPatch.BackgroundColor3 = Color3.fromRGB(28, 28, 35)
 topBarPatch.BorderSizePixel = 0
 
--- LOGIC DRAG UI ĐƯỢC GẮN VÀO TOPBAR
+-- LOGIC DRAG UI
 local dragToggle, dragStart, startPos
 topBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -109,12 +108,22 @@ end)
 
 -- NÚT THU GỌN MENU
 local minBtn = Instance.new("TextButton", topBar)
-minBtn.Size = UDim2.new(1, 0, 1, 0)
+minBtn.Size = UDim2.new(1, -40, 1, 0)
 minBtn.BackgroundTransparency = 1
 minBtn.Text = "✨ NHẬT MINH HUB | Rút gọn UI"
 minBtn.TextColor3 = Color3.fromRGB(0, 180, 216)
 minBtn.Font = Enum.Font.GothamBold
 minBtn.TextSize = 13
+
+-- NÚT HƯỚNG DẪN (?)
+local helpBtn = Instance.new("TextButton", topBar)
+helpBtn.Size = UDim2.new(0, 26, 0, 26)
+helpBtn.Position = UDim2.new(1, -35, 0, 7)
+helpBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+helpBtn.TextColor3 = Color3.fromRGB(0, 255, 255)
+helpBtn.Text = "?"
+helpBtn.Font = Enum.Font.GothamBold
+local helpCorner = Instance.new("UICorner", helpBtn); helpCorner.CornerRadius = UDim.new(0, 6)
 
 local contentFrame = Instance.new("Frame", mainFrame)
 contentFrame.Size = UDim2.new(1, 0, 1, -40)
@@ -132,6 +141,43 @@ minBtn.MouseButton1Click:Connect(function()
         minBtn.Text = "✨ NHẬT MINH HUB | Rút gọn UI"
     end
 end)
+
+-- BẢNG HELP UI
+local helpFrame = Instance.new("Frame", gui)
+helpFrame.Size = UDim2.new(0, 450, 0, 280) -- Rộng 450, Cao 280 (Bạn có thể tăng giảm số 450 và 280 tùy ý)
+helpFrame.Position = UDim2.new(0.5, -225, 0.5, -140)
+helpFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+helpFrame.Visible = false
+local hc = Instance.new("UICorner", helpFrame); hc.CornerRadius = UDim.new(0, 10)
+local hs = Instance.new("UIStroke", helpFrame); hs.Color = Color3.fromRGB(0, 255, 255); hs.Thickness = 1.5
+
+local helpTitle = Instance.new("TextLabel", helpFrame)
+helpTitle.Size = UDim2.new(1, 0, 0, 30)
+helpTitle.Text = "HƯỚNG DẪN SỬ DỤNG"
+helpTitle.TextColor3 = Color3.fromRGB(0, 255, 255)
+helpTitle.BackgroundTransparency = 1
+helpTitle.Font = Enum.Font.GothamBold
+
+local helpText = Instance.new("TextLabel", helpFrame)
+helpText.Size = UDim2.new(1, -20, 1, -40)
+helpText.Position = UDim2.new(0, 10, 0, 30)
+helpText.Text = "- THIS SCRIPT IS NO KEY\n- Bấm vào khu config để switch hoặc bấm G\n- Phím X: Reset mục tiêu (Aim)\n- Chế độ camera:xoay cam về mục tiêu\n- Chế độ root:xoay người về mục tiêu(bypass shift lock nhé nên cứ an tầm shift lock)\n- Aim là aim người chơi gần nhất,có thể lock nếu muốn\n- Để lưu config,trước tiên chỉnh theo ý rồi bấm lưu.Bấm tải để load\n- Reset current Aim chỉ cần thiết khi lỗi hoặc đang khóa Aim\n- Bấm xuất mã để nhận mã của config,nút áp dụng để load config từ mã\n- SCRIPT CHỈ HOẠT ĐỘNG TRÊN MÁY TÍNH\n- Lỗi báo về nhatminhn1977@gmail.com\n- UI Design by Gemini\n- Core & Function Design by Nhật Minh"
+helpText.TextColor3 = Color3.fromRGB(255, 255, 255)
+helpText.BackgroundTransparency = 1
+helpText.Font = Enum.Font.Gotham
+helpText.TextSize = 13
+helpText.TextXAlignment = Enum.TextXAlignment.Left
+helpText.TextYAlignment = Enum.TextYAlignment.Top
+
+local closeHelp = Instance.new("TextButton", helpFrame)
+closeHelp.Size = UDim2.new(0, 30, 0, 30)
+closeHelp.Position = UDim2.new(1, -30, 0, 0)
+closeHelp.Text = "X"
+closeHelp.TextColor3 = Color3.fromRGB(255, 50, 50)
+closeHelp.BackgroundTransparency = 1
+closeHelp.Font = Enum.Font.GothamBold
+closeHelp.MouseButton1Click:Connect(function() helpFrame.Visible = false end)
+helpBtn.MouseButton1Click:Connect(function() helpFrame.Visible = not helpFrame.Visible end)
 
 -- AVATAR VÀ TARGET
 local avatarImg = Instance.new("ImageLabel", contentFrame)
@@ -269,7 +315,7 @@ for _, key in ipairs(skillKeys) do
 end
 
 -- ====================================================================
--- 📦 KHU VỰC ĐIỀU KHIỂN CONFIG MỚI
+-- 📦 KHU VỰC ĐIỀU KHIỂN CONFIG MỚI (ĐÃ FIX LỖI TEXTBOX)
 -- ====================================================================
 
 local createFrame = Instance.new("Frame", contentFrame)
@@ -281,7 +327,8 @@ local nameInput = Instance.new("TextBox", createFrame)
 nameInput.Size = UDim2.new(0.65, 0, 1, 0)
 nameInput.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 nameInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-nameInput.PlaceholderText = "Nhập tên Config..."
+nameInput.PlaceholderText = "Nhập tên Config để tạo..."
+nameInput.Text = "" -- Đã được fix
 nameInput.Font = Enum.Font.Gotham
 nameInput.TextSize = 12
 local nCorner = Instance.new("UICorner", nameInput); nCorner.CornerRadius = UDim.new(0, 6)
@@ -340,6 +387,7 @@ codeInput.Size = UDim2.new(1, 0, 0, 30)
 codeInput.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 codeInput.TextColor3 = Color3.fromRGB(0, 255, 150)
 codeInput.PlaceholderText = "Nhập hoặc lấy mã xuất tại đây..."
+codeInput.Text = "" -- Đã được fix
 codeInput.TextXAlignment = Enum.TextXAlignment.Left
 codeInput.TextScaled = true
 codeInput.Font = Enum.Font.Code
@@ -402,7 +450,6 @@ loadBtn.MouseButton1Click:Connect(function()
     refreshUIFromConfig()
 end)
 
--- Định dạng Skill cho việc xuất mã
 local function encodeSkill(skill)
     if skill.Enabled then
         return skill.Method == "Camera" and "1" or "2"
@@ -410,6 +457,7 @@ local function encodeSkill(skill)
         return "3"
     end
 end
+
 exportBtn.MouseButton1Click:Connect(function()
     local codeStr = ""
     for i, profile in ipairs(Profiles) do
@@ -427,25 +475,18 @@ exportBtn.MouseButton1Click:Connect(function()
         if i < #Profiles then codeStr = codeStr .. "_" end
     end
     
-    -- Hiển thị mã ra ô
-    codeInput.Text = codeStr
-    
-    -- Tự động copy vào clipboard của máy tính
     pcall(function() setclipboard(codeStr) end) 
     
-    -- Hiệu ứng UI đổi nút thành ĐÃ COPY
-    local oldText = exportBtn.Text
-    local oldColor = exportBtn.BackgroundColor3
-    
-    exportBtn.Text = "✅ ĐÃ COPY"
-    exportBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113) -- Đổi sang màu xanh lá
+    local oldColor = codeInput.TextColor3
+    codeInput.TextColor3 = Color3.fromRGB(46, 204, 113)
+    codeInput.Text = "✅ ĐÃ COPY MÃ VÀO CLIPBOARD!"
     
     task.delay(1.5, function()
-        exportBtn.Text = oldText
-        exportBtn.BackgroundColor3 = oldColor
+        codeInput.TextColor3 = oldColor
+        codeInput.Text = codeStr
     end)
 end)
--- Giải mã Skill
+
 local function decodeSkill(val)
     if val == "1" then return {Enabled = true, Method = "Camera"}
     elseif val == "2" then return {Enabled = true, Method = "Root"}
@@ -542,9 +583,9 @@ creditLbl.TextColor3 = Color3.fromRGB(150, 150, 160)
 creditLbl.BackgroundTransparency = 1
 creditLbl.Font = Enum.Font.Gotham
 creditLbl.TextSize = 11
-creditLbl.Text = "💎 Script by Nhật Minh 1602 💎" 
+creditLbl.Text = "Script by Nhật Minh 1602" 
 
--- LOGIC CORE VÀ VÒNG LẶP (ĐƯỢC GIỮ NGUYÊN)
+-- LOGIC CORE VÀ VÒNG LẶP
 local function doAim(method, duration)
     isLocking = true; currentMethod = method
     local hum = player.Character and player.Character:FindFirstChild("Humanoid")
@@ -555,7 +596,17 @@ local function doAim(method, duration)
 end
 
 UserInputService.InputBegan:Connect(function(input, gpe)
-    if gpe then return end
+    if gpe or UserInputService:GetFocusedTextBox() then return end
+    
+    -- Xử lý đổi Config qua phím G
+    if input.KeyCode == Enum.KeyCode.G then
+        CurrentSelectedProfile = (CurrentSelectedProfile % #Profiles) + 1
+        Config = deepCopy(Profiles[CurrentSelectedProfile].Data)
+        refreshUIFromConfig()
+        profileBtn.Text = "📁 " .. Profiles[CurrentSelectedProfile].Name
+        return
+    end
+
     if input.KeyCode == Enum.KeyCode.X then
         forceResetTarget()
         return
