@@ -282,6 +282,7 @@ nameInput.Size = UDim2.new(0.65, 0, 1, 0)
 nameInput.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 nameInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 nameInput.PlaceholderText = "Nhập tên Config..."
+nameInput.Text = ""
 nameInput.Font = Enum.Font.Gotham
 nameInput.TextSize = 12
 local nCorner = Instance.new("UICorner", nameInput); nCorner.CornerRadius = UDim.new(0, 6)
@@ -340,6 +341,7 @@ codeInput.Size = UDim2.new(1, 0, 0, 30)
 codeInput.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 codeInput.TextColor3 = Color3.fromRGB(0, 255, 150)
 codeInput.PlaceholderText = "Nhập hoặc lấy mã xuất tại đây..."
+codeInput.Text = ""
 codeInput.TextXAlignment = Enum.TextXAlignment.Left
 codeInput.TextScaled = true
 codeInput.Font = Enum.Font.Code
@@ -410,7 +412,6 @@ local function encodeSkill(skill)
         return "3"
     end
 end
-
 exportBtn.MouseButton1Click:Connect(function()
     local codeStr = ""
     for i, profile in ipairs(Profiles) do
@@ -427,19 +428,21 @@ exportBtn.MouseButton1Click:Connect(function()
         codeStr = codeStr .. profile.Name .. a .. b .. c .. s1 .. s2 .. s3 .. s4 .. sR
         if i < #Profiles then codeStr = codeStr .. "_" end
     end
-    codeInput.Text = codeStr
+    
+    -- Tự động copy vào clipboard
     pcall(function() setclipboard(codeStr) end) 
-    local oldText = exportBtn.Text
-    local oldColor = exportBtn.BackgroundColor3
     
-    exportBtn.Text = "✅ ĐÃ COPY"
-    exportBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113) 
+    -- Hiển thị chữ ĐÃ COPY vào ô TextBox
+    local oldColor = codeInput.TextColor3
+    codeInput.TextColor3 = Color3.fromRGB(46, 204, 113) -- Đổi text thành màu xanh lá báo thành công
+    codeInput.Text = "✅ ĐÃ COPY MÃ VÀO CLIPBOARD!"
     
+    -- Sau 1.5 giây thì hiển thị lại đoạn mã thực tế ra ô TextBox
     task.delay(1.5, function()
-        exportBtn.Text = oldText
-        exportBtn.BackgroundColor3 = oldColor
+        codeInput.TextColor3 = oldColor
+        codeInput.Text = codeStr
     end)
-end) -- ĐÃ THÊM end) Ở ĐÂY ĐỂ VÁ LỖI CÚ PHÁP
+end)
 
 -- Giải mã Skill
 local function decodeSkill(val)
