@@ -410,7 +410,6 @@ local function encodeSkill(skill)
         return "3"
     end
 end
-
 exportBtn.MouseButton1Click:Connect(function()
     local codeStr = ""
     for i, profile in ipairs(Profiles) do
@@ -427,20 +426,25 @@ exportBtn.MouseButton1Click:Connect(function()
         codeStr = codeStr .. profile.Name .. a .. b .. c .. s1 .. s2 .. s3 .. s4 .. sR
         if i < #Profiles then codeStr = codeStr .. "_" end
     end
+    
+    -- Hiển thị mã ra ô
     codeInput.Text = codeStr
+    
+    -- Tự động copy vào clipboard của máy tính
     pcall(function() setclipboard(codeStr) end) 
+    
+    -- Hiệu ứng UI đổi nút thành ĐÃ COPY
     local oldText = exportBtn.Text
     local oldColor = exportBtn.BackgroundColor3
     
     exportBtn.Text = "✅ ĐÃ COPY"
-    exportBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113) 
+    exportBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113) -- Đổi sang màu xanh lá
     
     task.delay(1.5, function()
         exportBtn.Text = oldText
         exportBtn.BackgroundColor3 = oldColor
     end)
-end) -- ĐÃ THÊM end) Ở ĐÂY ĐỂ VÁ LỖI CÚ PHÁP
-
+end)
 -- Giải mã Skill
 local function decodeSkill(val)
     if val == "1" then return {Enabled = true, Method = "Camera"}
