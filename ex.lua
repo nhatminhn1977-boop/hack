@@ -144,8 +144,8 @@ end)
 
 -- BẢNG HELP UI
 local helpFrame = Instance.new("Frame", gui)
-helpFrame.Size = UDim2.new(0, 350, 0, 200)
-helpFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
+helpFrame.Size = UDim2.new(0, 450, 0, 280) -- Rộng 450, Cao 280 (Bạn có thể tăng giảm số 450 và 280 tùy ý)
+helpFrame.Position = UDim2.new(0.5, -225, 0.5, -140)
 helpFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 helpFrame.Visible = false
 local hc = Instance.new("UICorner", helpFrame); hc.CornerRadius = UDim.new(0, 10)
