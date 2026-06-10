@@ -51,7 +51,7 @@ local gui = Instance.new("ScreenGui", player.PlayerGui)
 gui.ResetOnSpawn = false
 
 local mainFrame = Instance.new("Frame", gui)
-mainFrame.Size = UDim2.new(0, 290, 0, 650) -- Kéo dài UI ra một chút để chứa các nút mới
+mainFrame.Size = UDim2.new(0, 290, 0, 650)
 mainFrame.Position = UDim2.new(0.05, 0, 0.1, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 mainFrame.BorderSizePixel = 0
@@ -71,7 +71,7 @@ local topBar = Instance.new("Frame", mainFrame)
 topBar.Size = UDim2.new(1, 0, 0, 40)
 topBar.BackgroundColor3 = Color3.fromRGB(28, 28, 35)
 topBar.BorderSizePixel = 0
-topBar.Active = true -- Cho phép tương tác kéo thả
+topBar.Active = true 
 
 local topBarCorner = Instance.new("UICorner", topBar)
 topBarCorner.CornerRadius = UDim.new(0, 10)
@@ -269,10 +269,9 @@ for _, key in ipairs(skillKeys) do
 end
 
 -- ====================================================================
--- 📦 KHU VỰC ĐIỀU KHIỂN CONFIG MỚI (CREATE, LOAD, SAVE, IMPORT/EXPORT)
+-- 📦 KHU VỰC ĐIỀU KHIỂN CONFIG MỚI
 -- ====================================================================
 
--- 1. Ô nhập tên Config & Nút Create
 local createFrame = Instance.new("Frame", contentFrame)
 createFrame.Size = UDim2.new(0.88, 0, 0, 30)
 createFrame.Position = UDim2.new(0.06, 0, 0, 360)
@@ -297,7 +296,6 @@ createBtn.Font = Enum.Font.GothamBold
 createBtn.TextSize = 12
 local crCorner = Instance.new("UICorner", createBtn); crCorner.CornerRadius = UDim.new(0, 6)
 
--- 2. Chọn Config, Lưu, Tải
 local manageFrame = Instance.new("Frame", contentFrame)
 manageFrame.Size = UDim2.new(0.88, 0, 0, 30)
 manageFrame.Position = UDim2.new(0.06, 0, 0, 395)
@@ -332,7 +330,6 @@ loadBtn.Font = Enum.Font.GothamBold
 loadBtn.TextSize = 11
 local lCorner = Instance.new("UICorner", loadBtn); lCorner.CornerRadius = UDim.new(0, 6)
 
--- 3. Nút Xuất Mã & Áp Dụng Mã
 local codeFrame = Instance.new("Frame", contentFrame)
 codeFrame.Size = UDim2.new(0.88, 0, 0, 65)
 codeFrame.Position = UDim2.new(0.06, 0, 0, 430)
@@ -431,17 +428,18 @@ exportBtn.MouseButton1Click:Connect(function()
         if i < #Profiles then codeStr = codeStr .. "_" end
     end
     codeInput.Text = codeStr
-    pcall(function() setclipboard(codeStr) end) -- Tự động copy nếu exploit có hỗ trợ
+    pcall(function() setclipboard(codeStr) end) 
     local oldText = exportBtn.Text
     local oldColor = exportBtn.BackgroundColor3
     
     exportBtn.Text = "✅ ĐÃ COPY"
-    exportBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113) -- Đổi sang màu xanh lá
+    exportBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113) 
     
     task.delay(1.5, function()
         exportBtn.Text = oldText
         exportBtn.BackgroundColor3 = oldColor
-end)
+    end)
+end) -- ĐÃ THÊM end) Ở ĐÂY ĐỂ VÁ LỖI CÚ PHÁP
 
 -- Giải mã Skill
 local function decodeSkill(val)
