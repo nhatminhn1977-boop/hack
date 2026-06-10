@@ -346,6 +346,7 @@ codeInput.PlaceholderText = "Nhập hoặc lấy mã xuất tại đây..."
 codeInput.TextXAlignment = Enum.TextXAlignment.Left
 codeInput.TextScaled = true
 codeInput.Font = Enum.Font.Code
+codeInput.ClearTextOnFocus = false
 local cCorner = Instance.new("UICorner", codeInput); cCorner.CornerRadius = UDim.new(0, 6)
 
 local exportBtn = Instance.new("TextButton", codeFrame)
@@ -431,6 +432,15 @@ exportBtn.MouseButton1Click:Connect(function()
     end
     codeInput.Text = codeStr
     pcall(function() setclipboard(codeStr) end) -- Tự động copy nếu exploit có hỗ trợ
+    local oldText = exportBtn.Text
+    local oldColor = exportBtn.BackgroundColor3
+    
+    exportBtn.Text = "✅ ĐÃ COPY"
+    exportBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113) -- Đổi sang màu xanh lá
+    
+    task.delay(1.5, function()
+        exportBtn.Text = oldText
+        exportBtn.BackgroundColor3 = oldColor
 end)
 
 -- Giải mã Skill
