@@ -144,7 +144,7 @@ end)
 
 -- BẢNG HELP UI
 local helpFrame = Instance.new("Frame", gui)
-helpFrame.Size = UDim2.new(0, 300, 0, 150)
+helpFrame.Size = UDim2.new(0, 350, 0, 200)
 helpFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
 helpFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 helpFrame.Visible = false
