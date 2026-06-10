@@ -583,7 +583,7 @@ creditLbl.TextColor3 = Color3.fromRGB(150, 150, 160)
 creditLbl.BackgroundTransparency = 1
 creditLbl.Font = Enum.Font.Gotham
 creditLbl.TextSize = 11
-creditLbl.Text = "💎 Script by Nhật Minh 1602 💎" 
+creditLbl.Text = "Script by Nhật Minh 1602" 
 
 -- LOGIC CORE VÀ VÒNG LẶP
 local function doAim(method, duration)
