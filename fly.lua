@@ -5,7 +5,7 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
 local flying = false
-local speed = 50 
+local speed = 120
 local ANIMATION_ID = 96276041445117
 local currentTrack = nil
 local flyConnection = nil -- Biến dùng để quản lý vòng lặp tránh Memory Leak
