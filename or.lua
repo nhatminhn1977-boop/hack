@@ -1,3 +1,5 @@
+-- 1.2
+
 local G2L = {}
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -8,7 +10,7 @@ local flying = false
 local speed = 120
 local ANIMATION_ID = 96276041445117
 local currentTrack = nil
-local flyConnection = nil -- Biến dùng để quản lý vòng lặp tránh Memory Leak
+local flyConnection = nil -- Quản lý vòng lặp tránh Memory Leak
 
 local function playFlyAnim(char, state)
     local humanoid = char:FindFirstChildOfClass("Humanoid")
@@ -28,7 +30,7 @@ local function playFlyAnim(char, state)
     anim.AnimationId = "rbxassetid://" .. tostring(ANIMATION_ID)
     
     pcall(function()
-        currentTrack = animator:LoadAnimation(anim) -- Dùng Animator thay vì Humanoid
+        currentTrack = animator:LoadAnimation(anim)
         currentTrack.Looped = true
         currentTrack.Priority = Enum.AnimationPriority.Movement
         currentTrack:Play()
@@ -41,7 +43,7 @@ G2L["1"].ResetOnSpawn = false
 G2L["1"].Parent = player:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame", G2L["1"])
-MainFrame.Size = UDim2.new(0, 240, 0, 160) -- Tăng chiều cao để vừa khu vực chỉnh speed
+MainFrame.Size = UDim2.new(0, 240, 0, 160)
 MainFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 MainFrame.BorderSizePixel = 0
@@ -150,7 +152,7 @@ local function updateSpeedDisplay()
 end
 
 DecButton.MouseButton1Click:Connect(function()
-    if speed > 10 then -- Giới hạn không cho tốc độ xuống <= 0
+    if speed > 10 then 
         speed = speed - 10
         updateSpeedDisplay()
     end
@@ -176,17 +178,33 @@ local function fly()
     
     local oldBv = hrp:FindFirstChild("FlyVelocity")
     if oldBv then oldBv:Destroy() end
+    local oldBg = hrp:FindFirstChild("FlyGyro")
+    if oldBg then oldBg:Destroy() end
 
     if flying then
+        -- 1. Sử dụng BodyVelocity điều khiển tốc độ
         local bv = Instance.new("BodyVelocity")
         bv.Name = "FlyVelocity"
         bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
         bv.Velocity = Vector3.new(0, 0, 0)
         bv.Parent = hrp
         
+        -- 2. Đưa BodyGyro vào để chống xoay người khi va chạm và đồng bộ Shift Lock giống script tham khảo[cite: 2]
+        local bg = Instance.new("BodyGyro")
+        bg.Name = "FlyGyro"
+        bg.P = 90000 -- Lực giữ góc hướng giống bản mẫu V3[cite: 2]
+        bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+        bg.CFrame = hrp.CFrame
+        bg.Parent = hrp
+        
+        -- Chuyển trạng thái sang PlatformStand để chống các lực can thiệp từ hoạt ảnh chạy mặt đất
+        humanoid.PlatformStand = true
+        
         flyConnection = RunService.RenderStepped:Connect(function()
             if not flying or not hrp:IsDescendantOf(workspace) then 
                 bv:Destroy()
+                bg:Destroy()
+                humanoid.PlatformStand = false
                 if flyConnection then
                     flyConnection:Disconnect()
                     flyConnection = nil
@@ -202,9 +220,13 @@ local function fly()
             if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir -= cam.CFrame.RightVector end
             if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir += cam.CFrame.RightVector end
             
-            -- Giá trị speed thay đổi động ở đây sẽ được cập nhật trực tiếp vào Vector vận tốc
             bv.Velocity = moveDir * speed
+            
+            -- Khóa hướng xoay của người khớp hoàn toàn với CFrame của Camera (Hỗ trợ Shift Lock tối đa)[cite: 2]
+            bg.CFrame = cam.CFrame
         end)
+    else
+        humanoid.PlatformStand = false
     end
 end
 
@@ -232,7 +254,6 @@ FlyButton.MouseButton1Click:Connect(function()
     ToggleFlyState()
 end)
 
--- Thay đổi phím tắt kích hoạt từ E sang V
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.V then
         flying = not flying
@@ -247,7 +268,6 @@ player.CharacterAdded:Connect(function(newCharacter)
     end
 end)
 
--- Sửa logic nút thu nhỏ (Minimize) để ẩn/hiển thị khu vực chỉnh tốc độ mới một cách đồng bộ
 local isMinimized = false
 MinimizeButton.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
@@ -257,16 +277,16 @@ MinimizeButton.MouseButton1Click:Connect(function()
         MainStroke.Color = Color3.fromRGB(150, 40, 40) 
         Title.Visible = false
         FlyButton.Visible = false
-        SpeedFrame.Visible = false -- Ẩn cụm chỉnh tốc độ
+        SpeedFrame.Visible = false
         MinimizeButton.Position = UDim2.new(0, 5, 0, 5)
         MinimizeButton.Text = "+"
     else
-        MainFrame.Size = UDim2.new(0, 240, 0, 160) -- Trả về đúng kích thước đã mở rộng
+        MainFrame.Size = UDim2.new(0, 240, 0, 160)
         MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18) 
         MainStroke.Color = Color3.fromRGB(45, 45, 45) 
         Title.Visible = true
         FlyButton.Visible = true
-        SpeedFrame.Visible = true -- Hiện lại cụm chỉnh tốc độ
+        SpeedFrame.Visible = true
         MinimizeButton.Position = UDim2.new(1, -30, 0, 5)
         MinimizeButton.Text = "-"
     end
