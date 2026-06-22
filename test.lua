@@ -1,568 +1,192 @@
-local _0x0000 = _0x0001:_0x0002(string.char(80, 108, 97, 121, 101, 114, 115))
-local _0x0003 = _0x0001:_0x0002(string.char(82, 117, 110, 83, 101, 114, 118, 105, 99, 101))
-local _0x0004 = _0x0001:_0x0002(string.char(85, 115, 101, 114, 73, 110, 112, 117, 116, 83, 101, 114, 118, 105, 99, 101))
-local _0x0005 = _0x0006._0x0007
-local _0x0008 = _0x0000._0x0009
-local _0x000a = {
-_0x000b = {_0x000c = true, _0x000d = string.char(82, 111, 111, 116), _0x000e = 0.4},
-_0x000f = {
-[_0x0010._0x0011._0x0012] = {_0x000c = true, _0x000d = string.char(67, 97, 109, 101, 114, 97)},
-[_0x0010._0x0011._0x0013] = {_0x000c = true, _0x000d = string.char(67, 97, 109, 101, 114, 97)},
-[_0x0010._0x0011._0x0014] = {_0x000c = true, _0x000d = string.char(67, 97, 109, 101, 114, 97)},
-[_0x0010._0x0011._0x0015] = {_0x000c = true, _0x000d = string.char(67, 97, 109, 101, 114, 97)},
-[_0x0010._0x0011._0x0016] = {_0x000c = true, _0x000d = string.char(67, 97, 109, 101, 114, 97)}
-},
-_0x0017 = false,
-_0x0018 = true
-}
-local _0x0019 = {_0x0010._0x0011._0x0012, _0x0010._0x0011._0x0013, _0x0010._0x0011._0x0014, _0x0010._0x0011._0x0015, _0x0010._0x0011._0x0016}
-local function _0x001a(_0x001b)
-local _0x001c = {}
-for _0x001d, _0x001e in pairs(_0x001b) do
-if type(_0x001e) == string.char(116, 97, 98, 108, 101) then
-_0x001c[_0x001d] = _0x001a(_0x001e)
-else
-_0x001c[_0x001d] = _0x001e
+-- [[ MODERN MINIMALIST FLY GUI ]] --
+-- Tối ưu hóa từ lõi FLY GUI V3 của XNEO, mượt mà hơn cho Mobile
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Cấu hình tốc độ bay (Thay thế hệ thống bấm nút + - phức tạp cũ)
+local FLY_SPEED = 2.5 
+
+-- Khởi tạo UI bảo mật và hiện đại
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ModernFlyGui_Protected"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+-- Khung nền (Main Frame)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Màu tối hiện đại
+MainFrame.Position = UDim2.new(0.1, 0, 0.4, 0)
+MainFrame.Size = UDim2.new(0, 140, 0, 45)
+MainFrame.Active = true
+
+-- Bo góc cho Khung nền
+local FrameCorner = Instance.new("UICorner")
+FrameCorner.CornerRadius = UDim.new(0, 10)
+FrameCorner.Parent = MainFrame
+
+-- Nút bấm duy nhất: FLY Toggle
+local FlyButton = Instance.new("TextButton")
+FlyButton.Name = "FlyButton"
+FlyButton.Parent = MainFrame
+FlyButton.BackgroundColor3 = Color3.fromRGB(255, 75, 75) -- Màu đỏ ban đầu (OFF)
+FlyButton.Position = UDim2.new(0.06, 0, 0.12, 0)
+FlyButton.Size = UDim2.new(0.88, 0, 0.76, 0)
+FlyButton.Font = Enum.Font.GothamBold
+FlyButton.Text = "FLY: OFF"
+FlyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlyButton.TextSize = 14
+
+-- Bo góc cho Nút bấm
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 8)
+ButtonCorner.Parent = FlyButton
+
+-- Thêm viền mờ cho đẹp mắt
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(60, 60, 60)
+UIStroke.Thickness = 1
+UIStroke.Parent = MainFrame
+
+--------------------------------------------------------
+-- CƠ CHẾ KÉO THẢ (DRAG) HIỆN ĐẠI TƯƠNG THÍCH MOBILE
+--------------------------------------------------------
+local dragging, dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 end
-end
-return _0x001c
-end
-local _0x001f = 1
-local _0x0020 = {
-[1] = { _0x0021 = string.char(68, 101, 102, 97, 117, 108, 116), _0x0022 = _0x001a(_0x000a) }
-}
-local _0x0023 = nil
-local _0x0024 = false
-local _0x0025 = string.char(67, 97, 109, 101, 114, 97)
-local _0x0026 = false
-local _0x0027 = _0x0028._0x0029(string.char(83, 99, 114, 101, 101, 110, 71, 117, 105), _0x0008._0x002a)
-_0x0027._0x002b = false
-local _0x002c = _0x0028._0x0029(string.char(70, 114, 97, 109, 101), _0x0027)
-_0x002c._0x002d = _0x002e._0x0029(0, 290, 0, 650)
-_0x002c._0x002f = _0x002e._0x0029(0.05, 0, 0.1, 0)
-_0x002c._0x0030 = _0x0031._0x0032(20, 20, 25)
-_0x002c._0x0033 = 0
-_0x002c._0x0034 = true
-_0x002c._0x0035 = true
-local _0x0036 = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x002c)
-_0x0036._0x0037 = _0x0038._0x0029(0, 10)
-local _0x0039 = _0x0028._0x0029(string.char(85, 73, 83, 116, 114, 111, 107, 101), _0x002c)
-_0x0039._0x003a = _0x0031._0x0032(0, 180, 216)
-_0x0039._0x003b = 1.5
-_0x0039._0x003c = _0x0010._0x003c._0x003d
-local _0x003e = _0x0028._0x0029(string.char(70, 114, 97, 109, 101), _0x002c)
-_0x003e._0x002d = _0x002e._0x0029(1, 0, 0, 40)
-_0x003e._0x0030 = _0x0031._0x0032(28, 28, 35)
-_0x003e._0x0033 = 0
-_0x003e._0x0034 = true
-local _0x003f = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x003e)
-_0x003f._0x0037 = _0x0038._0x0029(0, 10)
-local _0x0040 = _0x0028._0x0029(string.char(70, 114, 97, 109, 101), _0x003e)
-_0x0040._0x002d = _0x002e._0x0029(1, 0, 0, 10)
-_0x0040._0x002f = _0x002e._0x0029(0, 0, 1, -10)
-_0x0040._0x0030 = _0x0031._0x0032(28, 28, 35)
-_0x0040._0x0033 = 0
-local _0x0041, _0x0042, _0x0043
-_0x003e._0x0044:_0x0045(function(_0x0046)
-if _0x0046._0x0047 == _0x0010._0x0047._0x0048 or _0x0046._0x0047 == _0x0010._0x0047._0x0049 then
-_0x0041 = true
-_0x0042 = _0x0046._0x002f
-_0x0043 = _0x002c._0x002f
-_0x0046._0x004a:_0x0045(function()
-if _0x0046._0x004b == _0x0010._0x004b._0x004c then
-_0x0041 = false
-end
+
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
 end)
-end
+
+MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
 end)
-_0x0004._0x004d:_0x0045(function(_0x0046)
-if _0x0046._0x0047 == _0x0010._0x0047._0x004e or _0x0046._0x0047 == _0x0010._0x0047._0x0049 then
-if _0x0041 then
-local _0x004f = _0x0046._0x002f - _0x0042
-local _0x0050 = _0x002e._0x0029(_0x0043._0x0051._0x0052, _0x0043._0x0051._0x0053 + _0x004f._0x0051, _0x0043._0x0054._0x0052, _0x0043._0x0054._0x0053 + _0x004f._0x0054)
-_0x002c._0x002f = _0x0050
-end
-end
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
 end)
-local _0x0055 = _0x0028._0x0029(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110), _0x003e)
-_0x0055._0x002d = _0x002e._0x0029(1, -40, 1, 0)
-_0x0055._0x0056 = 1
-_0x0055._0x0057 = string.char(78, 72, 7852, 84, 32, 77, 73, 78, 72, 32, 72, 85, 66, 32, 124, 32, 82, 250, 116, 32, 103, 7885, 110, 32, 85, 73)
-_0x0055._0x0058 = _0x0031._0x0032(0, 180, 216)
-_0x0055._0x0059 = _0x0010._0x0059._0x005a
-_0x0055._0x005b = 13
-local _0x005c = _0x0028._0x0029(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110), _0x003e)
-_0x005c._0x002d = _0x002e._0x0029(0, 26, 0, 26)
-_0x005c._0x002f = _0x002e._0x0029(1, -35, 0, 7)
-_0x005c._0x0030 = _0x0031._0x0032(35, 35, 45)
-_0x005c._0x0058 = _0x0031._0x0032(0, 255, 255)
-_0x005c._0x0057 = string.char(63)
-_0x005c._0x0059 = _0x0010._0x0059._0x005a
-local _0x005d = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x005c); _0x005d._0x0037 = _0x0038._0x0029(0, 6)
-local _0x005e = _0x0028._0x0029(string.char(70, 114, 97, 109, 101), _0x002c)
-_0x005e._0x002d = _0x002e._0x0029(1, 0, 1, -40)
-_0x005e._0x002f = _0x002e._0x0029(0, 0, 0, 40)
-_0x005e._0x0056 = 1
-_0x0055._0x005f:_0x0045(function()
-_0x0026 = not _0x0026
-_0x005e._0x0060 = not _0x0026
-if _0x0026 then
-_0x002c._0x002d = _0x002e._0x0029(0, 290, 0, 40)
-_0x0055._0x0057 = string.char(10024, 32, 78, 72, 7852, 84, 32, 77, 73, 78, 72, 32, 72, 85, 66, 32, 124, 32, 77, 7903, 32, 114, 7897, 110, 103, 32, 85, 73)
-else
-_0x002c._0x002d = _0x002e._0x0029(0, 290, 0, 650)
-_0x0055._0x0057 = string.char(10024, 32, 78, 72, 7852, 84, 32, 77, 73, 78, 72, 32, 72, 85, 66, 32, 124, 32, 82, 250, 116, 32, 103, 7885, 110, 32, 85, 73)
-end
+
+--------------------------------------------------------
+-- LÕI XỬ LÝ BAY CHÍNH (CORE LOGIC)
+--------------------------------------------------------
+local isFlying = false
+local hbConnection = nil
+
+FlyButton.MouseButton1Click:Connect(function()
+    local character = LocalPlayer.Character
+    local humanoid = character and character:FindFirstChildWhichIsA("Humanoid")
+    local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+    
+    if not character or not humanoid or not rootPart then return end
+
+    if isFlying then
+        -- TRẠNG THÁI: TẮT BAY (OFF)
+        isFlying = false
+        if hbConnection then hbConnection:Disconnect() end
+        
+        -[span_4](start_span)- Bật lại các trạng thái vật lý và hoạt ảnh gốc[span_4](end_span)
+        for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
+            humanoid:SetStateEnabled(state, true)
+        end
+        [span_5](start_span)humanoid:ChangeState(Enum.HumanoidStateType.Running)[span_5](end_span)
+        
+        if character:FindFirstChild("Animate") then
+            [span_6](start_span)character.Animate.Disabled = false[span_6](end_span)
+        end
+        for _, track in next, humanoid:GetPlayingAnimationTracks() do
+            track:AdjustSpeed(1)
+        end
+        
+        [span_7](start_span)humanoid.PlatformStand = false[span_7](end_span)
+        
+        -[span_8](start_span)[span_9](start_span)- Dọn dẹp các lực chống trọng lực cũ[span_8](end_span)[span_9](end_span)
+        if rootPart:FindFirstChild("MobileFly_Gyro") then rootPart.MobileFly_Gyro:Destroy() end
+        if rootPart:FindFirstChild("MobileFly_Velocity") then rootPart.MobileFly_Velocity:Destroy() end
+        
+        -- Cập nhật Giao diện
+        FlyButton.Text = "FLY: OFF"
+        FlyButton.BackgroundColor3 = Color3.fromRGB(255, 75, 75)
+    else
+        -- TRẠNG THÁI: BẬT BAY (ON)
+        isFlying = true
+        FlyButton.Text = "FLY: ON"
+        FlyButton.BackgroundColor3 = Color3.fromRGB(75, 225, 75) -- Đổi sang màu xanh lá
+        
+        -[span_10](start_span)- Khóa hoạt ảnh (Animation) để tránh lỗi giật hình khi bay[span_10](end_span)
+        if character:FindFirstChild("Animate") then
+            [span_11](start_span)character.Animate.Disabled = true[span_11](end_span)
+        end
+        for _, track in next, humanoid:GetPlayingAnimationTracks() do
+            [span_12](start_span)track:AdjustSpeed(0)[span_12](end_span)
+        end
+        
+        -[span_13](start_span)- Tắt các trạng thái va chạm vật lý mặt đất, ép nhân vật vào trạng thái bơi[span_13](end_span)
+        for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
+            [span_14](start_span)humanoid:SetStateEnabled(state, false)[span_14](end_span)
+        end
+        [span_15](start_span)humanoid:ChangeState(Enum.HumanoidStateType.Swimming)[span_15](end_span)
+        [span_16](start_span)[span_17](start_span)humanoid.PlatformStand = true[span_16](end_span)[span_17](end_span)
+        
+        -[span_18](start_span)[span_19](start_span)- Tạo Gyro giữ thăng bằng chống lật và điều hướng theo góc nhìn Camera[span_18](end_span)[span_19](end_span)
+        local bg = Instance.new("BodyGyro")
+        bg.Name = "MobileFly_Gyro"
+        bg.P = 9e4
+        [span_20](start_span)[span_21](start_span)bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)[span_20](end_span)[span_21](end_span)
+        [span_22](start_span)[span_23](start_span)bg.cframe = rootPart.CFrame[span_22](end_span)[span_23](end_span)
+        bg.Parent = rootPart
+        
+        -[span_24](start_span)[span_25](start_span)- Tạo Vận tốc triệt tiêu trọng lực giúp nhân vật đứng im lơ lửng khi thả Joystick[span_24](end_span)[span_25](end_span)
+        local bv = Instance.new("BodyVelocity")
+        bv.Name = "MobileFly_Velocity"
+        [span_26](start_span)[span_27](start_span)bv.velocity = Vector3.new(0, 0.1, 0)[span_26](end_span)[span_27](end_span)
+        [span_28](start_span)[span_29](start_span)bv.maxForce = Vector3.new(9e9, 9e9, 9e9)[span_28](end_span)[span_29](end_span)
+        bv.Parent = rootPart
+        
+        -[span_30](start_span)[span_31](start_span)- Vòng lặp đồng bộ di chuyển mượt mà thông qua Joystick (MoveDirection)[span_30](end_span)[span_31](end_span)
+        hbConnection = RunService.Heartbeat:Connect(function()
+            if isFlying and character and humanoid and humanoid.Parent and rootPart then
+                -[span_32](start_span)[span_33](start_span)- Luôn giữ góc người khớp với hướng xoay Camera[span_32](end_span)[span_33](end_span)
+                bg.cframe = workspace.CurrentCamera.CoordinateFrame
+                
+                -[span_34](start_span)[span_35](start_span)- Lõi Mobile: Đọc Joystick, nếu có đẩy hướng thì nhân vật sẽ di chuyển[span_34](end_span)[span_35](end_span)
+                if humanoid.MoveDirection.Magnitude > 0 then
+                    [span_36](start_span)[span_37](start_span)character:TranslateBy(humanoid.MoveDirection * (FLY_SPEED / 5))[span_36](end_span)[span_37](end_span)
+                end
+            end
+        end)
+    end
 end)
-local _0x0061 = _0x0028._0x0029(string.char(70, 114, 97, 109, 101), _0x0027)
-_0x0061._0x002d = _0x002e._0x0029(0, 450, 0, 280)
-_0x0061._0x002f = _0x002e._0x0029(0.5, -225, 0.5, -140)
-_0x0061._0x0030 = _0x0031._0x0032(30, 30, 40)
-_0x0061._0x0060 = false
-local _0x0062 = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x0061); _0x0062._0x0037 = _0x0038._0x0029(0, 10)
-local _0x0063 = _0x0028._0x0029(string.char(85, 73, 83, 116, 114, 111, 107, 101), _0x0061); _0x0063._0x003a = _0x0031._0x0032(0, 255, 255); _0x0063._0x003b = 1.5
-local _0x0064 = _0x0028._0x0029(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108), _0x0061)
-_0x0064._0x002d = _0x002e._0x0029(1, 0, 0, 30)
-_0x0064._0x0057 = string.char(72, 431, 7898, 78, 71, 32, 68, 7850, 78, 32, 83, 7916, 32, 68, 7908, 78, 71)
-_0x0064._0x0058 = _0x0031._0x0032(0, 255, 255)
-_0x0064._0x0056 = 1
-_0x0064._0x0059 = _0x0010._0x0059._0x005a
-local _0x0065 = _0x0028._0x0029(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108), _0x0061)
-_0x0065._0x002d = _0x002e._0x0029(1, -20, 1, -40)
-_0x0065._0x002f = _0x002e._0x0029(0, 10, 0, 30)
-_0x0065._0x0057 = string.char(45, 32, 84, 72, 73, 83, 32, 83, 67, 82, 73, 80, 84, 32, 73, 83, 32, 78, 79, 32, 75, 69, 89, 10, 45, 32, 66, 7845, 109, 32, 118, 224, 111, 32, 107, 104, 117, 32, 99, 111, 110, 102, 105, 103, 32, 273, 7875, 32, 115, 119, 105, 116, 99, 104, 32, 104, 111, 7863, 99, 32, 98, 7845, 109, 32, 71, 10, 45, 32, 80, 104, 237, 109, 32, 88, 58, 32, 82, 101, 115, 101, 116, 32, 109, 7909, 99, 32, 116, 105, 234, 117, 32, 40, 65, 105, 109, 41, 10, 45, 32, 67, 104, 7871, 32, 273, 7897, 32, 99, 97, 109, 101, 114, 97, 58, 120, 111, 97, 121, 32, 99, 97, 109, 32, 118, 7873, 32, 109, 7909, 99, 32, 116, 105, 234, 117, 10, 45, 32, 67, 104, 7871, 32, 273, 7897, 32, 114, 111, 111, 116, 58, 120, 111, 97, 121, 32, 110, 103, 432, 7901, 105, 32, 118, 7873, 32, 109, 7909, 99, 32, 116, 105, 234, 117, 40, 99, 7913, 32, 97, 110, 32, 116, 7847, 109, 32, 115, 104, 105, 102, 116, 32, 108, 111, 99, 107, 32, 110, 104, 233, 41, 10, 45, 32, 65, 105, 109, 32, 108, 224, 32, 97, 105, 109, 32, 110, 103, 432, 7901, 105, 32, 99, 104, 417, 105, 32, 103, 7847, 110, 32, 110, 104, 7845, 116, 44, 99, 243, 32, 116, 104, 7875, 32, 108, 111, 99, 107, 32, 110, 7871, 117, 32, 109, 117, 7889, 110, 10, 45, 32, 272, 7875, 32, 108, 432, 117, 32, 99, 111, 110, 102, 105, 103, 44, 116, 114, 432, 7899, 99, 32, 116, 105, 234, 110, 32, 99, 104, 7881, 110, 104, 32, 116, 104, 101, 111, 32, 253, 32, 114, 7891, 105, 32, 98, 7845, 109, 32, 108, 432, 117, 46, 66, 7845, 109, 32, 116, 7843, 105, 32, 273, 7875, 32, 108, 111, 97, 100, 10, 45, 32, 82, 101, 115, 101, 116, 32, 99, 117, 114, 114, 101, 110, 116, 32, 65, 105, 109, 32, 99, 104, 7881, 32, 99, 7847, 110, 32, 116, 104, 105, 7871, 116, 32, 107, 104, 105, 32, 108, 7895, 105, 32, 104, 111, 7863, 99, 32, 273, 97, 110, 103, 32, 107, 104, 243, 97, 32, 65, 105, 109, 10, 45, 32, 66, 7845, 109, 32, 120, 117, 7845, 116, 32, 109, 227, 32, 273, 7875, 32, 110, 104, 7853, 110, 32, 109, 227, 32, 99, 7911, 97, 32, 99, 111, 110, 102, 105, 103, 44, 110, 250, 116, 32, 225, 112, 32, 100, 7909, 110, 103, 32, 273, 7875, 32, 108, 111, 97, 100, 32, 99, 111, 110, 102, 105, 103, 32, 116, 7915, 32, 109, 227, 10, 45, 32, 83, 67, 82, 73, 80, 84, 32, 67, 72, 7880, 32, 72, 79, 7840, 84, 32, 272, 7896, 78, 71, 32, 84, 82, 202, 78, 32, 77, 193, 89, 32, 84, 205, 78, 72, 10, 45, 32, 76, 7895, 105, 32, 98, 225, 111, 32, 118, 7873, 32, 110, 104, 97, 116, 109, 105, 110, 104, 110, 49, 57, 55, 55, 64, 103, 109, 97, 105, 108, 46, 99, 111, 109, 10, 45, 32, 85, 73, 32, 68, 101, 115, 105, 103, 110, 32, 98, 121, 32, 71, 101, 109, 105, 110, 105, 10, 45, 32, 67, 111, 114, 101, 32, 38, 32, 70, 117, 110, 99, 116, 105, 111, 110, 32, 68, 101, 115, 105, 103, 110, 32, 98, 121, 32, 78, 104, 7853, 116, 32, 77, 105, 110, 104)
-_0x0065._0x0058 = _0x0031._0x0032(255, 255, 255)
-_0x0065._0x0056 = 1
-_0x0065._0x0059 = _0x0010._0x0059._0x0066
-_0x0065._0x005b = 13
-_0x0065._0x0067 = _0x0010._0x0067._0x0068
-_0x0065._0x0069 = _0x0010._0x0069._0x006a
-local _0x006b = _0x0028._0x0029(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110), _0x0061)
-_0x006b._0x002d = _0x002e._0x0029(0, 30, 0, 30)
-_0x006b._0x002f = _0x002e._0x0029(1, -30, 0, 0)
-_0x006b._0x0057 = string.char(88)
-_0x006b._0x0058 = _0x0031._0x0032(255, 50, 50)
-_0x006b._0x0056 = 1
-_0x006b._0x0059 = _0x0010._0x0059._0x005a
-_0x006b._0x005f:_0x0045(function() _0x0061._0x0060 = false end)
-_0x005c._0x005f:_0x0045(function() _0x0061._0x0060 = not _0x0061._0x0060 end)
-local _0x006c = _0x0028._0x0029(string.char(73, 109, 97, 103, 101, 76, 97, 98, 101, 108), _0x005e)
-_0x006c._0x002d = _0x002e._0x0029(0, 45, 0, 45)
-_0x006c._0x002f = _0x002e._0x0029(0.06, 0, 0, 12)
-_0x006c._0x0030 = _0x0031._0x0032(28, 28, 35)
-_0x006c._0x0033 = 0
-local _0x006d = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x006c)
-_0x006d._0x0037 = _0x0038._0x0029(1, 0)
-local _0x006e = _0x0028._0x0029(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108), _0x005e)
-_0x006e._0x002d = _0x002e._0x0029(0, 190, 0, 45)
-_0x006e._0x002f = _0x002e._0x0029(0.28, 0, 0, 12)
-_0x006e._0x0058 = _0x0031._0x0032(255, 255, 255)
-_0x006e._0x0056 = 1
-_0x006e._0x0057 = string.char(55356, 57263, 32, 78, 111, 32, 84, 97, 114, 103, 101, 116)
-_0x006e._0x0059 = _0x0010._0x0059._0x005a
-_0x006e._0x005b = 14
-_0x006e._0x0067 = _0x0010._0x0067._0x0068
-local function _0x006f(_0x0070, _0x0071, _0x0072, _0x0073)
-if _0x0071 then
-_0x0070._0x0030 = _0x0031._0x0032(0, 119, 182)
-_0x0070._0x0057 = _0x0072
-local _0x0074 = _0x0070:_0x0075(string.char(85, 73, 83, 116, 114, 111, 107, 101))
-if _0x0074 then _0x0074._0x003a = _0x0031._0x0032(0, 180, 216) end
-else
-_0x0070._0x0030 = _0x0031._0x0032(35, 35, 45)
-_0x0070._0x0057 = _0x0073
-local _0x0074 = _0x0070:_0x0075(string.char(85, 73, 83, 116, 114, 111, 107, 101))
-if _0x0074 then _0x0074._0x003a = _0x0031._0x0032(55, 55, 65) end
-end
-end
-local _0x0076, _0x0077, _0x0078
-local _0x0079 = {}
-local function _0x007a(_0x007b, _0x007c, _0x007d, _0x007e)
-local _0x0070 = _0x0028._0x0029(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110), _0x005e)
-_0x0070._0x002d = _0x002e._0x0029(0.88, 0, 0, 32)
-_0x0070._0x002f = _0x002e._0x0029(0.06, 0, 0, _0x007c)
-_0x0070._0x0058 = _0x0031._0x0032(255, 255, 255)
-_0x0070._0x0059 = _0x0010._0x0059._0x007f
-_0x0070._0x005b = 13
-local _0x0080 = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x0070); _0x0080._0x0037 = _0x0038._0x0029(0, 6)
-local _0x0081 = _0x0028._0x0029(string.char(85, 73, 83, 116, 114, 111, 107, 101), _0x0070); _0x0081._0x003b = 1
-_0x006f(_0x0070, _0x007e, _0x007b, _0x007b)
-_0x0070._0x005f:_0x0045(function() _0x007d(_0x0070) end)
-return _0x0070
-end
-_0x0076 = _0x007a(string.char(55357, 56594, 32, 76, 111, 99, 107, 32, 84, 97, 114, 103, 101, 116, 58, 32, 79, 70, 70), 68, function(_0x0070)
-_0x000a._0x0017 = not _0x000a._0x0017
-_0x006f(_0x0070, _0x000a._0x0017, string.char(55357, 56594, 32, 76, 111, 99, 107, 32, 84, 97, 114, 103, 101, 116, 58, 32, 79, 78), string.char(55357, 56594, 32, 76, 111, 99, 107, 32, 84, 97, 114, 103, 101, 116, 58, 32, 79, 70, 70))
-end, _0x000a._0x0017)
-_0x0077 = _0x007a(string.char(55357, 56385, 65039, 32, 69, 83, 80, 32, 78, 69, 65, 82, 69, 83, 84, 58, 32, 79, 78), 106, function(_0x0070)
-_0x000a._0x0018 = not _0x000a._0x0018
-_0x006f(_0x0070, _0x000a._0x0018, string.char(55357, 56385, 65039, 32, 69, 83, 80, 32, 78, 69, 65, 82, 69, 83, 84, 58, 32, 79, 78), string.char(55357, 56385, 65039, 32, 69, 83, 80, 32, 78, 69, 65, 82, 69, 83, 84, 58, 32, 79, 70, 70))
-end, _0x000a._0x0018)
-_0x0078 = _0x007a(string.char(9889, 32, 65, 117, 116, 111, 32, 65, 105, 109, 32, 68, 97, 115, 104, 58, 32, 79, 78), 144, function(_0x0070)
-_0x000a._0x000b._0x000c = not _0x000a._0x000b._0x000c
-_0x006f(_0x0070, _0x000a._0x000b._0x000c, string.char(9889, 32, 65, 117, 116, 111, 32, 65, 105, 109, 32, 68, 97, 115, 104, 58, 32, 79, 78), string.char(9889, 32, 65, 117, 116, 111, 32, 65, 105, 109, 32, 68, 97, 115, 104, 58, 32, 79, 70, 70))
-end, _0x000a._0x000b._0x000c)
-local _0x0082 = 184
-for _0x0083, _0x0084 in ipairs(_0x0019) do
-local _0x0085 = _0x0028._0x0029(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110), _0x005e)
-_0x0085._0x002d = _0x002e._0x0029(0.42, 0, 0, 30)
-_0x0085._0x002f = _0x002e._0x0029(0.06, 0, 0, _0x0082)
-_0x0085._0x0059 = _0x0010._0x0059._0x007f
-_0x0085._0x005b = 12
-_0x0085._0x0058 = _0x0031._0x0032(255, 255, 255)
-local _0x0086 = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x0085); _0x0086._0x0037 = _0x0038._0x0029(0, 6)
-local _0x0087 = _0x0028._0x0029(string.char(85, 73, 83, 116, 114, 111, 107, 101), _0x0085); _0x0087._0x003b = 1
-local function _0x0088()
-local _0x0089 = _0x000a._0x000f[_0x0084]
-if _0x0089._0x000c then
-_0x0085._0x0030 = _0x0031._0x0032(10, 135, 84)
-_0x0085._0x0057 = string.char(55357, 56613, 32, 83, 107, 105, 108, 108, 32) .. _0x0084._0x0021 .. string.char(58, 32, 79, 78)
-_0x0087._0x003a = _0x0031._0x0032(46, 204, 113)
-else
-_0x0085._0x0030 = _0x0031._0x0032(45, 40, 40)
-_0x0085._0x0057 = string.char(55357, 56484, 32, 83, 107, 105, 108, 108, 32) .. _0x0084._0x0021 .. string.char(58, 32, 79, 70, 70)
-_0x0087._0x003a = _0x0031._0x0032(120, 40, 40)
-end
-end
-_0x0085._0x005f:_0x0045(function()
-_0x000a._0x000f[_0x0084]._0x000c = not _0x000a._0x000f[_0x0084]._0x000c
-_0x0088()
+
+-- Tự động reset trạng thái nếu nhân vật bị reset/chết
+LocalPlayer.CharacterAdded:Connect(function()
+    isFlying = false
+    if hbConnection then hbConnection:Disconnect() end
 end)
-local _0x008a = _0x0028._0x0029(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110), _0x005e)
-_0x008a._0x002d = _0x002e._0x0029(0.42, 0, 0, 30)
-_0x008a._0x002f = _0x002e._0x0029(0.52, 0, 0, _0x0082)
-_0x008a._0x0059 = _0x0010._0x0059._0x007f
-_0x008a._0x005b = 12
-_0x008a._0x0058 = _0x0031._0x0032(255, 255, 255)
-local _0x008b = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x008a); _0x008b._0x0037 = _0x0038._0x0029(0, 6)
-local _0x008c = _0x0028._0x0029(string.char(85, 73, 83, 116, 114, 111, 107, 101), _0x008a); _0x008c._0x003b = 1
-local function _0x008d()
-local _0x0089 = _0x000a._0x000f[_0x0084]
-_0x008a._0x0057 = string.char(55356, 57260, 32) .. _0x0089._0x000d
-if _0x0089._0x000d == string.char(67, 97, 109, 101, 114, 97) then
-_0x008a._0x0030 = _0x0031._0x0032(142, 68, 173)
-_0x008c._0x003a = _0x0031._0x0032(165, 105, 189)
-else
-_0x008a._0x0030 = _0x0031._0x0032(211, 84, 0)
-_0x008c._0x003a = _0x0031._0x0032(230, 126, 34)
-end
-end
-_0x008a._0x005f:_0x0045(function()
-_0x000a._0x000f[_0x0084]._0x000d = (_0x000a._0x000f[_0x0084]._0x000d == string.char(67, 97, 109, 101, 114, 97) and string.char(82, 111, 111, 116) or string.char(67, 97, 109, 101, 114, 97))
-_0x008d()
-end)
-_0x0088()
-_0x008d()
-_0x0079[_0x0084] = {
-_0x008e = _0x0088,
-_0x008f = _0x008d
-}
-_0x0082 = _0x0082 + 34
-end
-local _0x0090 = _0x0028._0x0029(string.char(70, 114, 97, 109, 101), _0x005e)
-_0x0090._0x002d = _0x002e._0x0029(0.88, 0, 0, 30)
-_0x0090._0x002f = _0x002e._0x0029(0.06, 0, 0, 360)
-_0x0090._0x0056 = 1
-local _0x0091 = _0x0028._0x0029(string.char(84, 101, 120, 116, 66, 111, 120), _0x0090)
-_0x0091._0x002d = _0x002e._0x0029(0.65, 0, 1, 0)
-_0x0091._0x0030 = _0x0031._0x0032(30, 30, 40)
-_0x0091._0x0058 = _0x0031._0x0032(255, 255, 255)
-_0x0091._0x0092 = string.char(78, 104, 7853, 112, 32, 116, 234, 110, 32, 67, 111, 110, 102, 105, 103, 32, 273, 7875, 32, 116, 7841, 111, 46, 46, 46)
-_0x0091._0x0057 = ""
-_0x0091._0x0059 = _0x0010._0x0059._0x0066
-_0x0091._0x005b = 12
-local _0x0093 = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x0091); _0x0093._0x0037 = _0x0038._0x0029(0, 6)
-local _0x0094 = _0x0028._0x0029(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110), _0x0090)
-_0x0094._0x002d = _0x002e._0x0029(0.3, 0, 1, 0)
-_0x0094._0x002f = _0x002e._0x0029(0.7, 0, 0, 0)
-_0x0094._0x0030 = _0x0031._0x0032(0, 168, 255)
-_0x0094._0x0058 = _0x0031._0x0032(255, 255, 255)
-_0x0094._0x0057 = string.char(84, 7840, 79)
-_0x0094._0x0059 = _0x0010._0x0059._0x005a
-_0x0094._0x005b = 12
-local _0x0095 = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x0094); _0x0095._0x0037 = _0x0038._0x0029(0, 6)
-local _0x0096 = _0x0028._0x0029(string.char(70, 114, 97, 109, 101), _0x005e)
-_0x0096._0x002d = _0x002e._0x0029(0.88, 0, 0, 30)
-_0x0096._0x002f = _0x002e._0x0029(0.06, 0, 0, 395)
-_0x0096._0x0056 = 1
-local _0x0097 = _0x0028._0x0029(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110), _0x0096)
-_0x0097._0x002d = _0x002e._0x0029(0.4, 0, 1, 0)
-_0x0097._0x0030 = _0x0031._0x0032(45, 52, 54)
-_0x0097._0x0058 = _0x0031._0x0032(255, 255, 255)
-_0x0097._0x0059 = _0x0010._0x0059._0x005a
-_0x0097._0x005b = 11
-_0x0097._0x0057 = string.char(55357, 56513, 32) .. _0x0020[_0x001f]._0x0021
-local _0x0098 = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x0097); _0x0098._0x0037 = _0x0038._0x0029(0, 6)
-local _0x0099 = _0x0028._0x0029(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110), _0x0096)
-_0x0099._0x002d = _0x002e._0x0029(0.28, 0, 1, 0)
-_0x0099._0x002f = _0x002e._0x0029(0.43, 0, 0, 0)
-_0x0099._0x0030 = _0x0031._0x0032(230, 126, 34)
-_0x0099._0x0058 = _0x0031._0x0032(255, 255, 255)
-_0x0099._0x0057 = string.char(55357, 56510, 32, 76, 431, 85)
-_0x0099._0x0059 = _0x0010._0x0059._0x005a
-_0x0099._0x005b = 11
-local _0x009a = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x0099); _0x009a._0x0037 = _0x0038._0x0029(0, 6)
-local _0x009b = _0x0028._0x0029(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110), _0x0096)
-_0x009b._0x002d = _0x002e._0x0029(0.26, 0, 1, 0)
-_0x009b._0x002f = _0x002e._0x0029(0.74, 0, 0, 0)
-_0x009b._0x0030 = _0x0031._0x0032(46, 204, 113)
-_0x009b._0x0058 = _0x0031._0x0032(255, 255, 255)
-_0x009b._0x0057 = string.char(55357, 56588, 32, 84, 7842, 73)
-_0x009b._0x0059 = _0x0010._0x0059._0x005a
-_0x009b._0x005b = 11
-local _0x009c = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x009b); _0x009c._0x0037 = _0x0038._0x0029(0, 6)
-local _0x009d = _0x0028._0x0029(string.char(70, 114, 97, 109, 101), _0x005e)
-_0x009d._0x002d = _0x002e._0x0029(0.88, 0, 0, 65)
-_0x009d._0x002f = _0x002e._0x0029(0.06, 0, 0, 430)
-_0x009d._0x0056 = 1
-local _0x009e = _0x0028._0x0029(string.char(84, 101, 120, 116, 66, 111, 120), _0x009d)
-_0x009e._0x002d = _0x002e._0x0029(1, 0, 0, 30)
-_0x009e._0x0030 = _0x0031._0x0032(15, 15, 20)
-_0x009e._0x0058 = _0x0031._0x0032(0, 255, 150)
-_0x009e._0x0092 = string.char(78, 104, 7853, 112, 32, 104, 111, 7863, 99, 32, 108, 7845, 121, 32, 109, 227, 32, 120, 117, 7845, 116, 32, 116, 7841, 105, 32, 273, 226, 121, 46, 46, 46)
-_0x009e._0x0057 = ""
-_0x009e._0x0067 = _0x0010._0x0067._0x0068
-_0x009e._0x009f = true
-_0x009e._0x0059 = _0x0010._0x0059._0x00a0
-_0x009e._0x00a1 = false
-local _0x00a2 = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x009e); _0x00a2._0x0037 = _0x0038._0x0029(0, 6)
-local _0x00a3 = _0x0028._0x0029(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110), _0x009d)
-_0x00a3._0x002d = _0x002e._0x0029(0.48, 0, 0, 30)
-_0x00a3._0x002f = _0x002e._0x0029(0, 0, 0, 35)
-_0x00a3._0x0030 = _0x0031._0x0032(155, 89, 182)
-_0x00a3._0x0058 = _0x0031._0x0032(255, 255, 255)
-_0x00a3._0x0057 = string.char(55357, 56548, 32, 88, 85, 7844, 84, 32, 77, 195)
-_0x00a3._0x0059 = _0x0010._0x0059._0x005a
-_0x00a3._0x005b = 11
-local _0x00a4 = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x00a3); _0x00a4._0x0037 = _0x0038._0x0029(0, 6)
-local _0x00a5 = _0x0028._0x0029(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110), _0x009d)
-_0x00a5._0x002d = _0x002e._0x0029(0.48, 0, 0, 30)
-_0x00a5._0x002f = _0x002e._0x0029(0.52, 0, 0, 35)
-_0x00a5._0x0030 = _0x0031._0x0032(52, 152, 219)
-_0x00a5._0x0058 = _0x0031._0x0032(255, 255, 255)
-_0x00a5._0x0057 = string.char(55357, 56549, 32, 193, 80, 32, 68, 7908, 78, 71)
-_0x00a5._0x0059 = _0x0010._0x0059._0x005a
-_0x00a5._0x005b = 11
-local _0x00a6 = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x00a5); _0x00a6._0x0037 = _0x0038._0x0029(0, 6)
-local function _0x00a7()
-_0x006f(_0x0076, _0x000a._0x0017, string.char(55357, 56594, 32, 76, 111, 99, 107, 32, 84, 97, 114, 103, 101, 116, 58, 32, 79, 78), string.char(55357, 56594, 32, 76, 111, 99, 107, 32, 84, 97, 114, 103, 101, 116, 58, 32, 79, 70, 70))
-_0x006f(_0x0077, _0x000a._0x0018, string.char(55357, 56385, 65039, 32, 69, 83, 80, 32, 78, 69, 65, 82, 69, 83, 84, 58, 32, 79, 78), string.char(55357, 56385, 65039, 32, 69, 83, 80, 32, 78, 69, 65, 82, 69, 83, 84, 58, 32, 79, 70, 70))
-_0x006f(_0x0078, _0x000a._0x000b._0x000c, string.char(9889, 32, 65, 117, 116, 111, 32, 65, 105, 109, 32, 68, 97, 115, 104, 58, 32, 79, 78), string.char(9889, 32, 65, 117, 116, 111, 32, 65, 105, 109, 32, 68, 97, 115, 104, 58, 32, 79, 70, 70))
-for _0x0083, _0x0084 in ipairs(_0x0019) do
-_0x0079[_0x0084]._0x008e()
-_0x0079[_0x0084]._0x008f()
-end
-end
-_0x0094._0x005f:_0x0045(function()
-local _0x00a8 = _0x0091._0x0057
-if _0x00a8 ~= "" then
-table.insert(_0x0020, { _0x0021 = _0x00a8, _0x0022 = _0x001a(_0x000a) })
-_0x001f = #_0x0020
-_0x0097._0x0057 = string.char(55357, 56513, 32) .. _0x0020[_0x001f]._0x0021
-_0x0091._0x0057 = ""
-end
-end)
-_0x0097._0x005f:_0x0045(function()
-_0x001f = (_0x001f % #_0x0020) + 1
-_0x0097._0x0057 = string.char(55357, 56513, 32) .. _0x0020[_0x001f]._0x0021
-end)
-_0x0099._0x005f:_0x0045(function()
-_0x0020[_0x001f]._0x0022 = _0x001a(_0x000a)
-end)
-_0x009b._0x005f:_0x0045(function()
-_0x000a = _0x001a(_0x0020[_0x001f]._0x0022)
-_0x00a7()
-end)
-local function _0x00a9(_0x00aa)
-if _0x00aa._0x000c then
-return _0x00aa._0x000d == string.char(67, 97, 109, 101, 114, 97) and string.char(49) or string.char(50)
-else
-return string.char(51)
-end
-end
-_0x00a3._0x005f:_0x0045(function()
-local _0x00ab = ""
-for _0x00ac, _0x00ad in ipairs(_0x0020) do
-local _0x00ae = _0x00ad._0x0022
-local _0x00af = _0x00ae._0x0017 and string.char(50) or string.char(49)
-local _0x00b0 = _0x00ae._0x0018 and string.char(49) or string.char(50)
-local _0x00b1 = _0x00ae._0x000b._0x000c and string.char(49) or string.char(50)
-local _0x00b2 = _0x00a9(_0x00ae._0x000f[_0x0019[1]])
-local _0x00b3 = _0x00a9(_0x00ae._0x000f[_0x0019[2]])
-local _0x00b4 = _0x00a9(_0x00ae._0x000f[_0x0019[3]])
-local _0x00b5 = _0x00a9(_0x00ae._0x000f[_0x0019[4]])
-local _0x00b6 = _0x00a9(_0x00ae._0x000f[_0x0019[5]])
-_0x00ab = _0x00ab .. _0x00ad._0x0021 .. _0x00af .. _0x00b0 .. _0x00b1 .. _0x00b2 .. _0x00b3 .. _0x00b4 .. _0x00b5 .. _0x00b6
-if _0x00ac < #_0x0020 then _0x00ab = _0x00ab .. string.char(95) end
-end
-pcall(function() _0x00b7(_0x00ab) end)
-local _0x00b8 = _0x009e._0x0058
-_0x009e._0x0058 = _0x0031._0x0032(46, 204, 113)
-_0x009e._0x0057 = string.char(9989, 32, 272, 195, 32, 67, 79, 80, 89, 32, 77, 195, 32, 86, 192, 79, 32, 67, 76, 73, 80, 66, 79, 65, 82, 68, 33)
-_0x00b9._0x00ba(1.5, function()
-_0x009e._0x0058 = _0x00b8
-_0x009e._0x0057 = _0x00ab
-end)
-end)
-local function _0x00bb(_0x00bc)
-if _0x00bc == string.char(49) then return {_0x000c = true, _0x000d = string.char(67, 97, 109, 101, 114, 97)}
-elseif _0x00bc == string.char(50) then return {_0x000c = true, _0x000d = string.char(82, 111, 111, 116)}
-else return {_0x000c = false, _0x000d = string.char(67, 97, 109, 101, 114, 97)} end
-end
-_0x00a5._0x005f:_0x0045(function()
-local _0x00bd = _0x009e._0x0057
-if _0x00bd == "" then return end
-local _0x00be = string._0x00bf(_0x00bd, string.char(95))
-local _0x00c0 = {}
-for _0x0083, _0x00c1 in ipairs(_0x00be) do
-if string.len(_0x00c1) >= 9 then
-local _0x00c2 = string.sub(_0x00c1, -8)
-local _0x00c3 = string.sub(_0x00c1, 1, -9)
-local _0x00af, _0x00b0, _0x00b1, _0x00b2, _0x00b3, _0x00b4, _0x00b5, _0x00b6 = string.match(_0x00c2, string.char(40, 46, 41, 40, 46, 41, 40, 46, 41, 40, 46, 41, 40, 46, 41, 40, 46, 41, 40, 46, 41, 40, 46, 41))
-local _0x00c4 = _0x001a(_0x000a)
-_0x00c4._0x0017 = (_0x00af == string.char(50))
-_0x00c4._0x0018 = (_0x00b0 == string.char(49))
-_0x00c4._0x000b._0x000c = (_0x00b1 == string.char(49))
-_0x00c4._0x000f[_0x0019[1]] = _0x00bb(_0x00b2)
-_0x00c4._0x000f[_0x0019[2]] = _0x00bb(_0x00b3)
-_0x00c4._0x000f[_0x0019[3]] = _0x00bb(_0x00b4)
-_0x00c4._0x000f[_0x0019[4]] = _0x00bb(_0x00b5)
-_0x00c4._0x000f[_0x0019[5]] = _0x00bb(_0x00b6)
-table.insert(_0x00c0, {_0x0021 = _0x00c3, _0x0022 = _0x00c4})
-end
-end
-if #_0x00c0 > 0 then
-_0x0020 = _0x00c0
-_0x001f = 1
-_0x000a = _0x001a(_0x0020[1]._0x0022)
-_0x0097._0x0057 = string.char(55357, 56513, 32) .. _0x0020[1]._0x0021
-_0x00a7()
-end
-end)
-local _0x00c5 = _0x0028._0x0029(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110), _0x005e)
-_0x00c5._0x002d = _0x002e._0x0029(0.88, 0, 0, 34)
-_0x00c5._0x002f = _0x002e._0x0029(0.06, 0, 0, 505)
-_0x00c5._0x0030 = _0x0031._0x0032(192, 57, 43)
-_0x00c5._0x0058 = _0x0031._0x0032(255, 255, 255)
-_0x00c5._0x0059 = _0x0010._0x0059._0x005a
-_0x00c5._0x005b = 13
-_0x00c5._0x0057 = string.char(55357, 56580, 32, 82, 101, 115, 101, 116, 32, 67, 117, 114, 114, 101, 110, 116, 32, 65, 105, 109, 32, 40, 80, 104, 237, 109, 32, 88, 41)
-local _0x00c6 = _0x0028._0x0029(string.char(85, 73, 67, 111, 114, 110, 101, 114), _0x00c5); _0x00c6._0x0037 = _0x0038._0x0029(0, 6)
-local function _0x00c7()
-for _0x0083, _0x00c8 in pairs(_0x0000:_0x00c9()) do
-local _0x00ca = _0x00c8._0x00cb and _0x00c8._0x00cb:_0x00cc(string.char(80, 114, 105, 109, 101, 72, 76))
-if _0x00ca then _0x00ca:_0x00cd() end
-end
-local _0x00ce = _0x0008._0x00cb
-local _0x00cf = _0x00ce and _0x00ce:_0x00cc(string.char(72, 101, 97, 100))
-local _0x00d0 = _0x00ce and _0x00ce:_0x0075(string.char(72, 117, 109, 97, 110, 111, 105, 100))
-if not _0x00cf or (_0x00d0 and _0x00d0._0x00d1 <= 0) then _0x0023 = nil; _0x006e._0x0057 = string.char(55356, 57263, 32, 78, 111, 32, 84, 97, 114, 103, 101, 116); _0x006c._0x00d2 = ""; return end
-local _0x00d3, min = nil, 9999
-for _0x0083, _0x00c8 in pairs(_0x0000:_0x00c9()) do
-if _0x00c8 ~= _0x0008 and _0x00c8._0x00cb and _0x00c8._0x00cb:_0x00cc(string.char(72, 101, 97, 100)) then
-local _0x00d4 = _0x00c8._0x00cb:_0x0075(string.char(72, 117, 109, 97, 110, 111, 105, 100))
-if _0x00d4 and _0x00d4._0x00d1 > 0 then
-local _0x00ae = (_0x00c8._0x00cb._0x00d5._0x002f - _0x00cf._0x002f)._0x00d6
-if _0x00ae < min then min = _0x00ae; _0x00d3 = _0x00c8 end
-end
-end
-end
-_0x0023 = _0x00d3
-if _0x0023 and _0x0023._0x00cb and _0x0023._0x00cb:_0x00cc(string.char(72, 101, 97, 100)) then
-_0x006e._0x0057 = string.char(55356, 57263, 32) .. _0x0023._0x0021
-pcall(function() _0x006c._0x00d2 = _0x0000:_0x00d7(_0x0023._0x00d8, _0x0010._0x00d9._0x00da, _0x0010._0x00db._0x00dc) end)
-if _0x000a._0x0018 then
-local _0x00dd = _0x0028._0x0029(string.char(72, 105, 103, 104, 108, 105, 103, 104, 116), _0x0023._0x00cb); _0x00dd._0x0021 = string.char(80, 114, 105, 109, 101, 72, 76); _0x00dd._0x00de = _0x0031._0x0029(1, 0, 0)
-end
-else
-_0x006e._0x0057 = string.char(55356, 57263, 32, 78, 111, 32, 84, 97, 114, 103, 101, 116); _0x006c._0x00d2 = ""
-end
-end
-_0x00c5._0x005f:_0x0045(_0x00c7)
-local _0x00df = _0x0028._0x0029(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108), _0x005e)
-_0x00df._0x002d = _0x002e._0x0029(1, 0, 0, 20)
-_0x00df._0x002f = _0x002e._0x0029(0, 0, 0, 545)
-_0x00df._0x0058 = _0x0031._0x0032(150, 150, 160)
-_0x00df._0x0056 = 1
-_0x00df._0x0059 = _0x0010._0x0059._0x0066
-_0x00df._0x005b = 11
-_0x00df._0x0057 = string.char(83, 99, 114, 105, 112, 116, 32, 98, 121, 32, 78, 104, 7853, 116, 32, 77, 105, 110, 104, 32, 49, 54, 48, 50)
-local function _0x00e0(_0x00e1, _0x00e2)
-_0x0024 = true; _0x0025 = _0x00e1
-local _0x00e3 = _0x0008._0x00cb and _0x0008._0x00cb:_0x00cc(string.char(72, 117, 109, 97, 110, 111, 105, 100))
-if _0x00e3 then _0x00e3._0x00e4 = false end
-_0x00b9._0x00e5(_0x00e2)
-if _0x00e3 then _0x00e3._0x00e4 = true end
-_0x0024 = false
-end
-_0x0004._0x0044:_0x0045(function(_0x0046, _0x00e6)
-if _0x00e6 or _0x0004:_0x00e7() then return end
-if _0x0046._0x0011 == _0x0010._0x0011._0x00e8 then
-_0x001f = (_0x001f % #_0x0020) + 1
-_0x000a = _0x001a(_0x0020[_0x001f]._0x0022)
-_0x00a7()
-_0x0097._0x0057 = string.char(55357, 56513, 32) .. _0x0020[_0x001f]._0x0021
-return
-end
-if _0x0046._0x0011 == _0x0010._0x0011._0x0051 then
-_0x00c7()
-return
-end
-if not _0x0023 then return end
-if _0x0046._0x0011 == _0x0010._0x0011._0x00e9 and _0x000a._0x000b._0x000c then
-local _0x00ea = _0x0004:_0x00eb(_0x0010._0x0011._0x00ec) or _0x0004:_0x00eb(_0x0010._0x0011._0x00ed) or _0x0004:_0x00eb(_0x0010._0x0011._0x00ee)
-if not _0x00ea then _0x00e0(string.char(82, 111, 111, 116), _0x000a._0x000b._0x000e) end
-elseif _0x000a._0x000f[_0x0046._0x0011] and _0x000a._0x000f[_0x0046._0x0011]._0x000c then
-_0x00e0(_0x000a._0x000f[_0x0046._0x0011]._0x000d, 0.1)
-end
-end)
-_0x0003._0x00ef:_0x0045(function()
-if _0x0024 and _0x0023 and _0x0023._0x00cb and _0x0023._0x00cb:_0x00cc(string.char(72, 101, 97, 100)) and _0x0008._0x00cb and _0x0008._0x00cb:_0x00cc(string.char(72, 117, 109, 97, 110, 111, 105, 100, 82, 111, 111, 116, 80, 97, 114, 116)) then
-local _0x00f0 = _0x0023._0x00cb._0x00d5._0x002f
-local _0x00f1 = _0x0008._0x00cb._0x00f2
-if _0x0025 == string.char(82, 111, 111, 116) then
-_0x00f1._0x00f3 = _0x00f3._0x00f4(_0x00f1._0x002f, _0x00f5._0x0029(_0x00f0._0x0051, _0x00f1._0x002f._0x0054, _0x00f0._0x00f6))
-else
-_0x0005._0x00f3 = _0x00f3._0x00f4(_0x0005._0x00f3._0x002f, _0x00f0)
-end
-end
-end)
-_0x00b9._0x00f7(function()
-while _0x00b9._0x00e5(0.2) do
-local _0x00ce = _0x0008._0x00cb
-local _0x00cf = _0x00ce and _0x00ce:_0x00cc(string.char(72, 101, 97, 100))
-local _0x00d0 = _0x00ce and _0x00ce:_0x0075(string.char(72, 117, 109, 97, 110, 111, 105, 100))
-if not _0x00cf or (_0x00d0 and _0x00d0._0x00d1 <= 0) then
-_0x0023 = nil
-else
-local _0x00f8 = _0x0023 and _0x0023._0x00cb and _0x0023._0x00cb:_0x0075(string.char(72, 117, 109, 97, 110, 111, 105, 100))
-local _0x00f9 = _0x00f8 and _0x00f8._0x00d1 <= 0
-if not _0x000a._0x0017 or not _0x0023 or not _0x0023._0x00fa or not _0x0023._0x00cb or not _0x0023._0x00cb:_0x00cc(string.char(72, 101, 97, 100)) or _0x00f9 then
-local _0x00d3, min = nil, 9999
-for _0x0083, _0x00c8 in pairs(_0x0000:_0x00c9()) do
-if _0x00c8 ~= _0x0008 and _0x00c8._0x00cb and _0x00c8._0x00cb:_0x00cc(string.char(72, 101, 97, 100)) then
-local _0x00d4 = _0x00c8._0x00cb:_0x0075(string.char(72, 117, 109, 97, 110, 111, 105, 100))
-if _0x00d4 and _0x00d4._0x00d1 > 0 then
-local _0x00ae = (_0x00c8._0x00cb._0x00d5._0x002f - _0x00cf._0x002f)._0x00d6
-if _0x00ae < min then min = _0x00ae; _0x00d3 = _0x00c8 end
-end
-end
-end
-_0x0023 = _0x00d3
-end
-end
-for _0x0083, _0x00c8 in pairs(_0x0000:_0x00c9()) do
-local _0x00ca = _0x00c8._0x00cb and _0x00c8._0x00cb:_0x00cc(string.char(80, 114, 105, 109, 101, 72, 76))
-if _0x00ca then _0x00ca:_0x00cd() end
-end
-if _0x0023 and _0x0023._0x00cb and _0x0023._0x00cb:_0x00cc(string.char(72, 101, 97, 100)) then
-_0x006e._0x0057 = string.char(55356, 57263, 32) .. _0x0023._0x0021
-pcall(function() _0x006c._0x00d2 = _0x0000:_0x00d7(_0x0023._0x00d8, _0x0010._0x00d9._0x00da, _0x0010._0x00db._0x00dc) end)
-if _0x000a._0x0018 then
-local _0x00dd = _0x0028._0x0029(string.char(72, 105, 103, 104, 108, 105, 103, 104, 116), _0x0023._0x00cb); _0x00dd._0x0021 = string.char(80, 114, 105, 109, 101, 72, 76); _0x00dd._0x00de = _0x0031._0x0029(1, 0, 0)
-end
-else
-_0x006e._0x0057 = string.char(55356, 57263, 32, 78, 111, 32, 84, 97, 114, 103, 101, 116); _0x006c._0x00d2 = ""
-end
-end
-end)
+
+-- Thông báo kích hoạt thành công
+game:GetService("StarterGui"):SetCore("SendNotification", { 
+	Title = "Modern Fly GUI";
+	Text = "Đã tối ưu hóa cho Mobile!";
+	Duration = 3
+})
