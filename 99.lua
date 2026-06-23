@@ -893,6 +893,5 @@ HomeBtn.MouseButton1Down:Connect(function()
         hrp.CFrame = homeCFrame
     end
 end)
--- Khởi chạy mặc định lần đầu
 updateTabVisuals()
 _G.UpdateUIList(true)
