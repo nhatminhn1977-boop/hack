@@ -99,7 +99,7 @@ local function scanAndApplyHitboxes()
 end
 
 ----------------------------------------------------
--- LOGIC AUTO CHOP TREES
+-- LOGIC AUTO CHOP TREES (TELEPORT X+2)
 ----------------------------------------------------
 local function getNearestTree()
     local nearest = nil
@@ -126,7 +126,7 @@ local function getNearestTree()
 end
 
 task.spawn(function()
-    RunService.Heartbeat:Connect(function(deltaTime)
+    RunService.Heartbeat:Connect(function()
         if autoChopEnabled then
             local char = player.Character
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -134,25 +134,12 @@ task.spawn(function()
             
             local tree = getNearestTree()
             if tree then
-                -- Tính toán vị trí đứng (cách cây 3 studs để vụt trúng)
-                local targetPos = tree.Position + Vector3.new(3, 0, 3)
-                local currentPos = hrp.Position
-                local dist = (currentPos - targetPos).Magnitude
-                
-                -- Khóa lực hấp dẫn để lơ lửng khi bay tới cây
+                -- Dịch chuyển tức thời đến tọa độ X + 2 của cây và nhìn thẳng vào cây
+                hrp.CFrame = CFrame.lookAt(tree.Position + Vector3.new(2, 0, 0), tree.Position)
+                -- Triệt tiêu gia tốc để nhân vật không bị văng đi
                 hrp.Velocity = Vector3.new(0, 0, 0)
                 
-                if dist > 3 then
-                    -- Bay mượt về phía cây
-                    local moveDir = (targetPos - currentPos).Unit
-                    hrp.CFrame = hrp.CFrame + (moveDir * (speed * deltaTime))
-                    hrp.CFrame = CFrame.lookAt(hrp.Position, tree.Position)
-                else
-                    -- Đã tới nơi, xoay mặt vào cây
-                    hrp.CFrame = CFrame.lookAt(hrp.Position, tree.Position)
-                end
-                
-                -- Spam Click (Kích hoạt công cụ trên tay hoặc click ảo)
+                -- Spam Click (Dùng tool nếu có, hoặc giả lập click)
                 local tool = char:FindFirstChildOfClass("Tool")
                 if tool then tool:Activate() end
                 pcall(function() VirtualUser:ClickButton1(Vector2.new(0,0)) end)
@@ -241,7 +228,7 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 240, 0, 260) -- Mở rộng khung để chứa nút mới
+MainFrame.Size = UDim2.new(0, 240, 0, 260)
 MainFrame.Position = UDim2.new(0.05, 0, 0.25, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(19, 19, 22)
 MainFrame.BorderSizePixel = 0
@@ -391,7 +378,7 @@ local function ToggleAutoChopState()
         AutoChopBtn.BackgroundColor3 = Color3.fromRGB(24, 34, 28)
         AutoChopBtn.TextColor3 = Color3.fromRGB(100, 255, 150)
         AutoChopStroke.Color = Color3.fromRGB(46, 204, 113)
-        if hum then hum.PlatformStand = true end -- Lơ lửng chống rơi
+        if hum then hum.PlatformStand = true end -- Lơ lửng chống rơi rớt lung tung
     else
         AutoChopBtn.Text = "AUTO CHOP: OFF [J]"
         AutoChopBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
@@ -435,7 +422,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         flying = not flying
         ToggleFlyState()
     elseif input.KeyCode == Enum.KeyCode.J then
-        if autoChopEnabled then -- Chỉ bắt sự kiện tắt để dừng khẩn cấp hoặc toggle tùy ý
+        if autoChopEnabled then 
             autoChopEnabled = false
             ToggleAutoChopState()
         end
