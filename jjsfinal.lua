@@ -5,6 +5,7 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Camera = workspace.CurrentCamera
 local player = Players.LocalPlayer
+
 local Config = {
     Dash = {Enabled = true, Method = "Root", Duration = 0.8},
     Skills = {
@@ -17,8 +18,10 @@ local Config = {
     LockTarget = false,
     ESPEnabled = true,
     M1Aim = true,
-    AutoBlockEnabled = true
+    AutoBlockEnabled = true,
+    AutoBlockBreak = {Enabled = true, Distance = 9, ArcOffset = 4} -- Added from x1
 }
+
 local skillKeys = {Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four, Enum.KeyCode.R}
 local target = nil
 local specificTargetName = nil
@@ -32,15 +35,24 @@ local isAimingAtBullet = false
 local BLOCK_LINGER_TIME = 0.35
 local lastThreatTime = 0
 local lastPositions = {}
-local KnitServices, BlockServiceRE, ActivatedEvent, DeactivatedEvent
+
+local KnitServices, BlockServiceRE, ActivatedEvent, DeactivatedEvent, ItadoriActivatedEvent
 task.spawn(function()
     KnitServices = ReplicatedStorage:WaitForChild("Knit"):WaitForChild("Knit"):WaitForChild("Services")
     BlockServiceRE = KnitServices:WaitForChild("BlockService"):WaitForChild("RE")
     ActivatedEvent = BlockServiceRE:WaitForChild("Activated")
     DeactivatedEvent = BlockServiceRE:WaitForChild("Deactivated")
+    -- Load Itadori event for Auto Block Break (added from x1)
+    pcall(function()
+        ItadoriActivatedEvent = KnitServices:WaitForChild("ItadoriService"):WaitForChild("RE"):WaitForChild("Activated")
+    end)
 end)
+
 local gui = Instance.new("ScreenGui", player.PlayerGui)
 gui.ResetOnSpawn = false
+gui.Name = "NhatMinh_MergedHub"
+
+-- [ UI Setup: Mini Frame ]
 local miniFrame = Instance.new("Frame", gui)
 miniFrame.Size = UDim2.new(0, 230, 0, 170)
 miniFrame.Position = UDim2.new(0.05, 0, 0.1, 0)
@@ -54,12 +66,14 @@ local miniStroke = Instance.new("UIStroke", miniFrame)
 miniStroke.Color = Color3.fromRGB(0, 180, 216)
 miniStroke.Thickness = 1.5
 miniStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
 local miniAvatar = Instance.new("ImageLabel", miniFrame)
 miniAvatar.Size = UDim2.new(0, 36, 0, 36)
 miniAvatar.Position = UDim2.new(0, 7, 0, 7)
 miniAvatar.BackgroundColor3 = Color3.fromRGB(28, 28, 35)
 miniAvatar.BorderSizePixel = 0
 local mAvCorner = Instance.new("UICorner", miniAvatar); mAvCorner.CornerRadius = UDim.new(1, 0)
+
 local miniName = Instance.new("TextLabel", miniFrame)
 miniName.Size = UDim2.new(0, 130, 0, 20)
 miniName.Position = UDim2.new(0, 50, 0, 7)
@@ -69,6 +83,7 @@ miniName.Text = "No Target"
 miniName.Font = Enum.Font.GothamBold
 miniName.TextSize = 13
 miniName.TextXAlignment = Enum.TextXAlignment.Left
+
 local miniKills = Instance.new("TextLabel", miniFrame)
 miniKills.Size = UDim2.new(0, 130, 0, 16)
 miniKills.Position = UDim2.new(0, 50, 0, 27)
@@ -78,6 +93,7 @@ miniKills.Text = "Kills: 0"
 miniKills.Font = Enum.Font.Gotham
 miniKills.TextSize = 11
 miniKills.TextXAlignment = Enum.TextXAlignment.Left
+
 local miniEvade = Instance.new("TextLabel", miniFrame)
 miniEvade.Size = UDim2.new(0, 130, 0, 16)
 miniEvade.Position = UDim2.new(0, 50, 0, 43)
@@ -87,6 +103,7 @@ miniEvade.Text = "Evasive: N/A"
 miniEvade.Font = Enum.Font.GothamBold
 miniEvade.TextSize = 12
 miniEvade.TextXAlignment = Enum.TextXAlignment.Left
+
 local miniUltimate = Instance.new("TextLabel", miniFrame)
 miniUltimate.Size = UDim2.new(0, 130, 0, 16)
 miniUltimate.Position = UDim2.new(0, 50, 0, 59)
@@ -96,11 +113,13 @@ miniUltimate.Text = "Ultimate: N/A"
 miniUltimate.Font = Enum.Font.GothamBold
 miniUltimate.TextSize = 12
 miniUltimate.TextXAlignment = Enum.TextXAlignment.Left
+
 local lineMini = Instance.new("Frame", miniFrame)
 lineMini.Size = UDim2.new(1, -20, 0, 1)
 lineMini.Position = UDim2.new(0, 10, 0, 80)
 lineMini.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
 lineMini.BorderSizePixel = 0
+
 local skillLabels = {}
 for i = 1, 4 do
     local lbl = Instance.new("TextLabel", miniFrame)
@@ -114,6 +133,7 @@ for i = 1, 4 do
     lbl.TextColor3 = Color3.fromRGB(85, 255, 127)
     skillLabels[i] = {Label = lbl, Obj = nil}
 end
+
 local maxBtn = Instance.new("TextButton", miniFrame)
 maxBtn.Size = UDim2.new(0, 30, 0, 30)
 maxBtn.Position = UDim2.new(1, -37, 0, 10)
@@ -122,8 +142,10 @@ maxBtn.TextColor3 = Color3.fromRGB(0, 255, 255)
 maxBtn.Text = "+"
 maxBtn.Font = Enum.Font.GothamBold
 local maxCorner = Instance.new("UICorner", maxBtn); maxCorner.CornerRadius = UDim.new(0, 6)
+
+-- [ UI Setup: Main Frame ]
 local mainFrame = Instance.new("Frame", gui)
-mainFrame.Size = UDim2.new(0, 440, 0, 635)
+mainFrame.Size = UDim2.new(0, 440, 0, 650)
 mainFrame.Position = UDim2.new(0.05, 0, 0.1, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 mainFrame.BorderSizePixel = 0
@@ -135,6 +157,7 @@ local mainStroke = Instance.new("UIStroke", mainFrame)
 mainStroke.Color = Color3.fromRGB(0, 180, 216)
 mainStroke.Thickness = 1.5
 mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
 local function makeDraggable(topElement, frameToMove)
     local dragToggle, dragStart, startPos
     topElement.InputBegan:Connect(function(input)
@@ -158,6 +181,7 @@ local function makeDraggable(topElement, frameToMove)
         end
     end)
 end
+
 local topBar = Instance.new("Frame", mainFrame)
 topBar.Size = UDim2.new(1, 0, 0, 40)
 topBar.BackgroundColor3 = Color3.fromRGB(28, 28, 35)
@@ -169,15 +193,17 @@ topBarPatch.Size = UDim2.new(1, 0, 0, 10); topBarPatch.Position = UDim2.new(0, 0
 topBarPatch.BackgroundColor3 = Color3.fromRGB(28, 28, 35); topBarPatch.BorderSizePixel = 0
 makeDraggable(topBar, mainFrame)
 makeDraggable(miniFrame, miniFrame)
+
 local hubTitle = Instance.new("TextLabel", topBar)
 hubTitle.Size = UDim2.new(0, 180, 1, 0)
 hubTitle.Position = UDim2.new(0, 15, 0, 0)
 hubTitle.BackgroundTransparency = 1
-hubTitle.Text = "NHAT MINH HUB (LITE)"
+hubTitle.Text = "NHAT MINH HUB (MERGED)"
 hubTitle.TextColor3 = Color3.fromRGB(0, 180, 216)
 hubTitle.Font = Enum.Font.GothamBold
 hubTitle.TextSize = 13
 hubTitle.TextXAlignment = Enum.TextXAlignment.Left
+
 local minBtn = Instance.new("TextButton", topBar)
 minBtn.Size = UDim2.new(0, 26, 0, 26)
 minBtn.Position = UDim2.new(1, -95, 0, 7)
@@ -186,6 +212,7 @@ minBtn.TextColor3 = Color3.fromRGB(0, 255, 255)
 minBtn.Text = "-"
 minBtn.Font = Enum.Font.GothamBold
 local minCorner = Instance.new("UICorner", minBtn); minCorner.CornerRadius = UDim.new(0, 6)
+
 local toggleListBtn = Instance.new("TextButton", topBar)
 toggleListBtn.Size = UDim2.new(0, 26, 0, 26)
 toggleListBtn.Position = UDim2.new(1, -65, 0, 7)
@@ -194,6 +221,7 @@ toggleListBtn.TextColor3 = Color3.fromRGB(0, 255, 255)
 toggleListBtn.Text = "List"
 toggleListBtn.Font = Enum.Font.GothamBold
 local tlCorner = Instance.new("UICorner", toggleListBtn); tlCorner.CornerRadius = UDim.new(0, 6)
+
 local helpBtn = Instance.new("TextButton", topBar)
 helpBtn.Size = UDim2.new(0, 26, 0, 26)
 helpBtn.Position = UDim2.new(1, -35, 0, 7)
@@ -202,6 +230,7 @@ helpBtn.TextColor3 = Color3.fromRGB(0, 255, 255)
 helpBtn.Text = "?"
 helpBtn.Font = Enum.Font.GothamBold
 local helpCorner = Instance.new("UICorner", helpBtn); helpCorner.CornerRadius = UDim.new(0, 6)
+
 local contentFrame = Instance.new("Frame", mainFrame)
 contentFrame.Size = UDim2.new(1, 0, 1, -40)
 contentFrame.Position = UDim2.new(0, 0, 0, 40)
@@ -210,22 +239,26 @@ local rightFrame = Instance.new("Frame", contentFrame)
 rightFrame.Size = UDim2.new(0, 140, 1, 0)
 rightFrame.Position = UDim2.new(0, 290, 0, 0)
 rightFrame.BackgroundTransparency = 1
+
 local function updateMainFrameSize()
     local w = isListOpen and 440 or 290
-    local h = isSkillsOpen and 635 or 480
+    local h = isSkillsOpen and 670 or 495
     mainFrame.Size = UDim2.new(0, w, 0, h)
     rightFrame.Visible = isListOpen
 end
+
 minBtn.MouseButton1Click:Connect(function()
     miniFrame.Position = mainFrame.Position
     mainFrame.Visible = false
     miniFrame.Visible = true
 end)
+
 maxBtn.MouseButton1Click:Connect(function()
     mainFrame.Position = miniFrame.Position
     miniFrame.Visible = false
     mainFrame.Visible = true
 end)
+
 toggleListBtn.MouseButton1Click:Connect(function()
     isListOpen = not isListOpen
     if isListOpen then
@@ -235,6 +268,7 @@ toggleListBtn.MouseButton1Click:Connect(function()
     end
     updateMainFrameSize()
 end)
+
 local helpFrame = Instance.new("Frame", gui)
 helpFrame.Size = UDim2.new(0, 450, 0, 300)
 helpFrame.Position = UDim2.new(0.5, -225, 0.5, -150)
@@ -244,14 +278,14 @@ local hc = Instance.new("UICorner", helpFrame); hc.CornerRadius = UDim.new(0, 10
 local hs = Instance.new("UIStroke", helpFrame); hs.Color = Color3.fromRGB(0, 255, 255); hs.Thickness = 1.5
 local helpTitle = Instance.new("TextLabel", helpFrame)
 helpTitle.Size = UDim2.new(1, 0, 0, 30)
-helpTitle.Text = "LITE USAGE GUIDE"
+helpTitle.Text = "MERGED HUB USAGE GUIDE"
 helpTitle.TextColor3 = Color3.fromRGB(0, 255, 255)
 helpTitle.BackgroundTransparency = 1
 helpTitle.Font = Enum.Font.GothamBold
 local helpText = Instance.new("TextLabel", helpFrame)
 helpText.Size = UDim2.new(1, -20, 1, -40)
 helpText.Position = UDim2.new(0, 10, 0, 30)
-helpText.Text = "- UI minimize, toggle list, and hide skills integrated.\n- Key X: Reset Aim Target\n- KEY Q: Aim Root for 0.8s (Only when not holding A,S,D)\n- HOLD F: Hard lock character direction to target\n- ESP updates [ AIMED ] text for easy spotting\n- Report bugs to nhatminhn1977@gmail.com\n- UI Design by Gemini | Core & Function Design by Nhat Minh"
+helpText.Text = "- UI minimize, toggle list, and hide skills integrated.\n- Auto Block Break added: Auto TP back & attacks blocking enemies\n- Key X: Reset Aim Target\n- KEY Q: Aim Root for 0.8s (Only when not holding A,S,D)\n- HOLD F: Hard lock character direction to target\n- ESP updates [ AIMED ] text for easy spotting\n- Report bugs to nhatminhn1977@gmail.com\n- Script by Nhat Minh 1602"
 helpText.TextColor3 = Color3.fromRGB(255, 255, 255)
 helpText.BackgroundTransparency = 1
 helpText.Font = Enum.Font.Gotham
@@ -264,6 +298,7 @@ closeHelp.Text = "X"; closeHelp.TextColor3 = Color3.fromRGB(255, 50, 50)
 closeHelp.BackgroundTransparency = 1; closeHelp.Font = Enum.Font.GothamBold
 closeHelp.MouseButton1Click:Connect(function() helpFrame.Visible = false end)
 helpBtn.MouseButton1Click:Connect(function() helpFrame.Visible = not helpFrame.Visible end)
+
 local leftFrame = Instance.new("Frame", contentFrame)
 leftFrame.Size = UDim2.new(0, 290, 1, 0)
 leftFrame.BackgroundTransparency = 1
@@ -273,6 +308,7 @@ avatarImg.Position = UDim2.new(0.06, 0, 0, 12)
 avatarImg.BackgroundColor3 = Color3.fromRGB(28, 28, 35)
 avatarImg.BorderSizePixel = 0
 local avatarCorner = Instance.new("UICorner", avatarImg); avatarCorner.CornerRadius = UDim.new(1, 0)
+
 local nameLbl = Instance.new("TextLabel", leftFrame)
 nameLbl.Size = UDim2.new(0, 190, 0, 25)
 nameLbl.Position = UDim2.new(0.28, 0, 0, 12)
@@ -282,6 +318,7 @@ nameLbl.Text = "No Target"
 nameLbl.Font = Enum.Font.GothamBold
 nameLbl.TextSize = 14
 nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+
 local killsLbl = Instance.new("TextLabel", leftFrame)
 killsLbl.Size = UDim2.new(0, 190, 0, 20)
 killsLbl.Position = UDim2.new(0.28, 0, 0, 37)
@@ -291,6 +328,7 @@ killsLbl.Text = "Kills: 0"
 killsLbl.Font = Enum.Font.Gotham
 killsLbl.TextSize = 12
 killsLbl.TextXAlignment = Enum.TextXAlignment.Left
+
 local evadeLbl = Instance.new("TextLabel", leftFrame)
 evadeLbl.Size = UDim2.new(0, 190, 0, 22)
 evadeLbl.Position = UDim2.new(0.28, 0, 0, 55)
@@ -300,6 +338,7 @@ evadeLbl.Text = "Evasive: N/A"
 evadeLbl.Font = Enum.Font.GothamBlack
 evadeLbl.TextSize = 13
 evadeLbl.TextXAlignment = Enum.TextXAlignment.Left
+
 local cashLbl = Instance.new("TextLabel", leftFrame)
 cashLbl.Size = UDim2.new(0, 190, 0, 18)
 cashLbl.Position = UDim2.new(0.28, 0, 0, 77)
@@ -309,6 +348,7 @@ cashLbl.Text = "Cash: N/A"
 cashLbl.Font = Enum.Font.Gotham
 cashLbl.TextSize = 11
 cashLbl.TextXAlignment = Enum.TextXAlignment.Left
+
 local movesetLbl = Instance.new("TextLabel", leftFrame)
 movesetLbl.Size = UDim2.new(0, 190, 0, 18)
 movesetLbl.Position = UDim2.new(0.28, 0, 0, 95)
@@ -318,6 +358,7 @@ movesetLbl.Text = "Moveset: N/A"
 movesetLbl.Font = Enum.Font.Gotham
 movesetLbl.TextSize = 11
 movesetLbl.TextXAlignment = Enum.TextXAlignment.Left
+
 local ultLbl = Instance.new("TextLabel", leftFrame)
 ultLbl.Size = UDim2.new(0, 190, 0, 18)
 ultLbl.Position = UDim2.new(0.28, 0, 0, 113)
@@ -327,6 +368,7 @@ ultLbl.Text = "Ultimate: N/A"
 ultLbl.Font = Enum.Font.Gotham
 ultLbl.TextSize = 11
 ultLbl.TextXAlignment = Enum.TextXAlignment.Left
+
 local function updateButtonVisual(btn, state, activeText, inactiveText)
     if state then
         btn.BackgroundColor3 = Color3.fromRGB(0, 119, 182)
@@ -340,6 +382,7 @@ local function updateButtonVisual(btn, state, activeText, inactiveText)
         if stroke then stroke.Color = Color3.fromRGB(55, 55, 65) end
     end
 end
+
 local function createMainBtn(parentFrame, text, y, callback, isActiveInit)
     local btn = Instance.new("TextButton", parentFrame)
     btn.Size = UDim2.new(0.88, 0, 0, 30)
@@ -353,23 +396,29 @@ local function createMainBtn(parentFrame, text, y, callback, isActiveInit)
     btn.MouseButton1Click:Connect(function() callback(btn) end)
     return btn
 end
-createMainBtn(leftFrame, "Lock Target: OFF", 140, function(btn)
+
+-- [ Merged Buttons ]
+createMainBtn(leftFrame, "Lock Target: OFF", 130, function(btn)
     Config.LockTarget = not Config.LockTarget
     updateButtonVisual(btn, Config.LockTarget, "Lock Target: ON", "Lock Target: OFF")
 end, Config.LockTarget)
-createMainBtn(leftFrame, "ESP NEAREST: ON", 175, function(btn)
+
+createMainBtn(leftFrame, "ESP NEAREST: ON", 165, function(btn)
     Config.ESPEnabled = not Config.ESPEnabled
     updateButtonVisual(btn, Config.ESPEnabled, "ESP NEAREST: ON", "ESP NEAREST: OFF")
 end, Config.ESPEnabled)
-createMainBtn(leftFrame, "Dash Aim (Q): ON", 210, function(btn)
+
+createMainBtn(leftFrame, "Dash Aim (Q): ON", 200, function(btn)
     Config.Dash.Enabled = not Config.Dash.Enabled
     updateButtonVisual(btn, Config.Dash.Enabled, "Dash Aim (Q): ON", "Dash Aim (Q): OFF")
 end, Config.Dash.Enabled)
-createMainBtn(leftFrame, "M1 Aim: ON", 245, function(btn)
+
+createMainBtn(leftFrame, "M1 Aim: ON", 235, function(btn)
     Config.M1Aim = not Config.M1Aim
     updateButtonVisual(btn, Config.M1Aim, "M1 Aim: ON", "M1 Aim: OFF")
 end, Config.M1Aim)
-createMainBtn(leftFrame, "Auto Block: ON", 280, function(btn)
+
+createMainBtn(leftFrame, "Auto Block: ON", 270, function(btn)
     Config.AutoBlockEnabled = not Config.AutoBlockEnabled
     updateButtonVisual(btn, Config.AutoBlockEnabled, "Auto Block: ON", "Auto Block: OFF")
     if not Config.AutoBlockEnabled then
@@ -380,35 +429,47 @@ createMainBtn(leftFrame, "Auto Block: ON", 280, function(btn)
         end
     end
 end, Config.AutoBlockEnabled)
+
+-- [ Added from x1 ] Auto Block Break Button
+createMainBtn(leftFrame, "Auto Block Break: ON", 305, function(btn)
+    Config.AutoBlockBreak.Enabled = not Config.AutoBlockBreak.Enabled
+    updateButtonVisual(btn, Config.AutoBlockBreak.Enabled, "Auto Block Break: ON", "Auto Block Break: OFF")
+end, Config.AutoBlockBreak.Enabled)
+
+
 local toggleSkillsBtn = Instance.new("TextButton", leftFrame)
 toggleSkillsBtn.Size = UDim2.new(0.88, 0, 0, 30)
-toggleSkillsBtn.Position = UDim2.new(0.06, 0, 0, 318)
+toggleSkillsBtn.Position = UDim2.new(0.06, 0, 0, 345)
 toggleSkillsBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
 toggleSkillsBtn.TextColor3 = Color3.fromRGB(255, 215, 0)
 toggleSkillsBtn.Text = "Hide Skill Settings"
 toggleSkillsBtn.Font = Enum.Font.GothamBold
 toggleSkillsBtn.TextSize = 12
 local tsCorner = Instance.new("UICorner", toggleSkillsBtn); tsCorner.CornerRadius = UDim.new(0, 6)
+
 local skillContainer = Instance.new("Frame", leftFrame)
 skillContainer.Size = UDim2.new(1, 0, 0, 170)
-skillContainer.Position = UDim2.new(0, 0, 0, 355)
+skillContainer.Position = UDim2.new(0, 0, 0, 380)
 skillContainer.BackgroundTransparency = 1
+
 local bottomFrame = Instance.new("Frame", leftFrame)
 bottomFrame.Size = UDim2.new(1, 0, 0, 80)
-bottomFrame.Position = UDim2.new(0, 0, 0, 530)
+bottomFrame.Position = UDim2.new(0, 0, 0, 555)
 bottomFrame.BackgroundTransparency = 1
+
 toggleSkillsBtn.MouseButton1Click:Connect(function()
     isSkillsOpen = not isSkillsOpen
     skillContainer.Visible = isSkillsOpen
     if isSkillsOpen then
         toggleSkillsBtn.Text = "Hide Skill Settings"
-        bottomFrame.Position = UDim2.new(0, 0, 0, 530)
+        bottomFrame.Position = UDim2.new(0, 0, 0, 555)
     else
         toggleSkillsBtn.Text = "Show Skill Settings"
-        bottomFrame.Position = UDim2.new(0, 0, 0, 355)
+        bottomFrame.Position = UDim2.new(0, 0, 0, 380)
     end
     updateMainFrameSize()
 end)
+
 local skillY = 0
 for _, key in ipairs(skillKeys) do
     local toggleBtn = Instance.new("TextButton", skillContainer)
@@ -500,6 +561,7 @@ creditLbl.BackgroundTransparency = 1
 creditLbl.Font = Enum.Font.Gotham
 creditLbl.TextSize = 11
 creditLbl.Text = "Script by Nhat Minh 1602"
+
 local rightTitle = Instance.new("TextLabel", rightFrame)
 rightTitle.Size = UDim2.new(1, 0, 0, 20)
 rightTitle.Position = UDim2.new(0, 0, 0, 12)
@@ -508,6 +570,7 @@ rightTitle.TextColor3 = Color3.fromRGB(0, 255, 255)
 rightTitle.BackgroundTransparency = 1
 rightTitle.Font = Enum.Font.GothamBold
 rightTitle.TextSize = 12
+
 local clearTargetBtn = Instance.new("TextButton", rightFrame)
 clearTargetBtn.Size = UDim2.new(0.9, 0, 0, 25)
 clearTargetBtn.Position = UDim2.new(0.05, 0, 0, 40)
@@ -517,6 +580,7 @@ clearTargetBtn.Text = "Clear Target"
 clearTargetBtn.Font = Enum.Font.GothamBold
 clearTargetBtn.TextSize = 11
 local ctCorner = Instance.new("UICorner", clearTargetBtn); ctCorner.CornerRadius = UDim.new(0, 4)
+
 local refreshListBtn = Instance.new("TextButton", rightFrame)
 refreshListBtn.Size = UDim2.new(0.9, 0, 0, 25)
 refreshListBtn.Position = UDim2.new(0.05, 0, 0, 70)
@@ -526,6 +590,7 @@ refreshListBtn.Text = "Refresh List"
 refreshListBtn.Font = Enum.Font.GothamBold
 refreshListBtn.TextSize = 11
 local rlCorner = Instance.new("UICorner", refreshListBtn); rlCorner.CornerRadius = UDim.new(0, 4)
+
 local playerListScroll = Instance.new("ScrollingFrame", rightFrame)
 playerListScroll.Size = UDim2.new(0.9, 0, 1, -110)
 playerListScroll.Position = UDim2.new(0.05, 0, 0, 100)
@@ -537,6 +602,7 @@ local listLayout = Instance.new("UIListLayout", playerListScroll)
 listLayout.Padding = UDim.new(0, 5)
 listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
 local function isValidTarget(child, myChar)
     if child == myChar then return false end
     if child.Name == "MechamaruBot" or child.Name == "KuroClone" then return false end
@@ -548,6 +614,7 @@ local function isValidTarget(child, myChar)
     end
     return true
 end
+
 local function updateESPHighlight()
     local charactersModel = game.Workspace:FindFirstChild("Characters")
     if not charactersModel then return end
@@ -590,6 +657,7 @@ local function updateESPHighlight()
         end
     end
 end
+
 local function getTargetKills(pObj)
     if pObj and pObj:FindFirstChild("leaderstats") then
         local killsStat = pObj.leaderstats:FindFirstChild("Kills") or pObj.leaderstats:FindFirstChild("kills")
@@ -599,6 +667,7 @@ local function getTargetKills(pObj)
     end
     return "0"
 end
+
 local function updateTargetAttributes()
     if not target then
         evadeLbl.Text = "Evasive: N/A"
@@ -608,29 +677,7 @@ local function updateTargetAttributes()
         miniEvade.Text = "Evasive: N/A"
         return
     end
-
     local ev = target:GetAttribute("Evade")
-    -- Dùng math.round() để làm tròn Evasive tới hàng đơn vị
-    local evText = "Evasive: " .. (ev ~= nil and tostring(math.round(ev)) or "N/A")
-    evadeLbl.Text = evText
-    miniEvade.Text = evText
-
-    local playerTarget = game.Players:FindFirstChild(target.Name)
-    local csh = playerTarget and playerTarget:GetAttribute("Cash")
-    local mov = playerTarget and playerTarget:GetAttribute("Moveset")
-    local ult = playerTarget and playerTarget:GetAttribute("Ultimate")
-
-    -- Dùng math.round() để làm tròn Cash và Ultimate
-    local cashText = "Cash: " .. (csh ~= nil and tostring(math.round(csh)) or "N/A")
-    local movText = "Moveset: " .. (mov ~= nil and tostring(mov) or "N/A")
-    local ultText = "Ultimate: " .. (ult ~= nil and tostring(math.round(ult)) or "N/A")
-
-    cashLbl.Text = cashText
-    movesetLbl.Text = movText
-    ultLbl.Text = ultText
-    miniUltimate.Text = ultText
-end
-local ev = target:GetAttribute("Evade")
     local evText = "Evasive: " .. (ev ~= nil and tostring(ev) or "N/A")
     evadeLbl.Text = evText
     miniEvade.Text = evText
@@ -646,6 +693,7 @@ local ev = target:GetAttribute("Evade")
     ultLbl.Text = ultText
     miniUltimate.Text = ultText
 end
+
 local function forceResetTarget()
     local myChar = player.Character
     local myHead = myChar and myChar:FindFirstChild("Head")
@@ -706,6 +754,7 @@ local function forceResetTarget()
     updateESPHighlight()
     updateTargetAttributes()
 end
+
 resetBtn.MouseButton1Click:Connect(forceResetTarget)
 local function refreshPlayerList()
     for _, v in pairs(playerListScroll:GetChildren()) do
@@ -756,6 +805,60 @@ clearTargetBtn.MouseButton1Click:Connect(function()
     forceResetTarget()
 end)
 task.delay(1, refreshPlayerList)
+
+-- [ Added from x1 ] Helper Functions for Block Break
+local function playJJSAnimation(animId, priority)
+    local myChar = player.Character
+    local hum = myChar and myChar:FindFirstChild("Humanoid")
+    if not hum then return nil end
+    local animator = hum:FindFirstChild("Animator")
+    if not animator then return nil end
+    local anim = Instance.new("Animation")
+    anim.AnimationId = string.find(tostring(animId), "rbxassetid") and animId or "rbxassetid://" .. animId
+    local track = animator:LoadAnimation(anim)
+    track.Priority = priority or Enum.AnimationPriority.Action4
+    track:Play()
+    return track
+end
+
+local function lockFacingTarget(myChar, targetHrp, duration)
+    task.spawn(function()
+        local hum = myChar:FindFirstChildOfClass("Humanoid")
+        local myHrp = myChar:FindFirstChild("HumanoidRootPart")
+        if not hum or not myHrp then return end
+        hum.AutoRotate = false
+        local startTime = os.clock()
+        local connection
+        connection = RunService.RenderStepped:Connect(function()
+            if os.clock() - startTime >= duration or not targetHrp or not targetHrp.Parent or not myHrp or not myHrp.Parent then
+                connection:Disconnect()
+                if hum and hum.Parent then hum.AutoRotate = true end
+                return
+            end
+            local targetPos = Vector3.new(targetHrp.Position.X, myHrp.Position.Y, targetHrp.Position.Z)
+            myHrp.CFrame = CFrame.lookAt(myHrp.Position, targetPos)
+        end)
+    end)
+end
+
+local function tweenArcToBack(myHrp, targetHrp)
+    local startPos = myHrp.Position
+    local endCFrame = targetHrp.CFrame * CFrame.new(0, 0, Config.AutoBlockBreak.ArcOffset)
+    local endPos = endCFrame.Position
+    local sideOffset = targetHrp.CFrame.RightVector * 3
+    local controlPos = ((startPos + endPos) / 2) + sideOffset
+    local duration = 0.18
+    local startTime = os.clock()
+    while os.clock() - startTime < duration do
+        local t = (os.clock() - startTime) / duration
+        t = math.clamp(t, 0, 1)
+        local currentPos = (1 - t)^2 * startPos + 2 * (1 - t) * t * controlPos + t^2 * endPos
+        myHrp.CFrame = CFrame.lookAt(currentPos, Vector3.new(targetHrp.Position.X, currentPos.Y, targetHrp.Position.Z))
+        RunService.Heartbeat:Wait()
+    end
+    myHrp.CFrame = CFrame.lookAt(endPos, Vector3.new(targetHrp.Position.X, endPos.Y, targetHrp.Position.Z))
+end
+
 local function doAim(method, duration)
     isLocking = true
     currentMethod = method
@@ -771,24 +874,81 @@ local function doAim(method, duration)
     end
     isLocking = false
 end
+
+-- [ Modified Input System ]
+local isExecutingBlockBreak = false
+
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe or UserInputService:GetFocusedTextBox() then return end
-    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and Config.M1Aim then
-        if target then
+
+    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+        -- 1. Check Auto Block Break First
+        if Config.AutoBlockBreak.Enabled and not isExecutingBlockBreak then
+            local myChar = player.Character
+            local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
+            local charactersFolder = workspace:FindFirstChild("Characters")
+            
+            if myHrp and charactersFolder then
+                local closestTarget = nil
+                local minDistance = math.huge
+                for _, char in ipairs(charactersFolder:GetChildren()) do
+                    if char:IsA("Model") and char ~= myChar then
+                        local root = char:FindFirstChild("HumanoidRootPart")
+                        local hum = char:FindFirstChildOfClass("Humanoid")
+                        if root and hum and hum.Health > 0 then
+                            local dist = (root.Position - myHrp.Position).Magnitude
+                            if dist < minDistance then
+                                minDistance = dist
+                                closestTarget = char
+                            end
+                        end
+                    end
+                end
+                
+                if closestTarget then
+                    local targetHrp = closestTarget:FindFirstChild("HumanoidRootPart")
+                    local infoFolder = closestTarget:FindFirstChild("Info")
+                    local isBlocking = infoFolder and infoFolder:FindFirstChild("Block") ~= nil
+                    local distance = (targetHrp.Position - myHrp.Position).Magnitude
+                    
+                    if isBlocking and distance <= Config.AutoBlockBreak.Distance then
+                        isExecutingBlockBreak = true
+                        lockFacingTarget(myChar, targetHrp, 1.0)
+                        playJJSAnimation("117223862448096", Enum.AnimationPriority.Action3)
+                        tweenArcToBack(myHrp, targetHrp)
+                        task.wait(0.03)
+                        playJJSAnimation("95295463826732", Enum.AnimationPriority.Action4)
+                        if ItadoriActivatedEvent then
+                            ItadoriActivatedEvent:FireServer(false, nil)
+                        end
+                        task.wait(0.5) 
+                        isExecutingBlockBreak = false
+                        return -- Ngăn M1 Aim chèn lên nếu đang Block Break
+                    end
+                end
+            end
+        end
+
+        -- 2. Regular M1 Aim
+        if Config.M1Aim and target then
             doAim("Root", 0.3)
         end
     end
+    
     if input.KeyCode == Enum.KeyCode.X then
         forceResetTarget()
         return
     end
+    
     if input.KeyCode == Enum.KeyCode.F then
         isHoldingF = true
         local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
         if hum then hum.AutoRotate = false end
         return
     end
+    
     if not target then return end
+    
     if input.KeyCode == Enum.KeyCode.Q and Config.Dash.Enabled then
         local isMovingSide = UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.D)
         if not isMovingSide then
@@ -798,6 +958,7 @@ UserInputService.InputBegan:Connect(function(input, gpe)
         doAim(Config.Skills[input.KeyCode].Method, Config.Skills[input.KeyCode].Duration)
     end
 end)
+
 UserInputService.InputEnded:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.F then
         isHoldingF = false
@@ -807,6 +968,7 @@ UserInputService.InputEnded:Connect(function(input)
         end
     end
 end)
+
 local currentTargetForSkills = nil
 RunService.RenderStepped:Connect(function()
     local myChar = player.Character
@@ -878,6 +1040,7 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
+
 task.spawn(function()
     while task.wait(0.2) do
         local myChar = player.Character
@@ -944,12 +1107,15 @@ task.spawn(function()
         updateTargetAttributes()
     end
 end)
+
 player.CharacterAdded:Connect(function()
     isHoldingF = false
     isAimingAtBullet = false
     task.delay(1, refreshPlayerList)
 end)
+
 updateMainFrameSize()
+
 local function isHeadingTowards(item, itemCFrame, targetPos)
     local bulletPos = itemCFrame.Position
     local directionToTarget = (targetPos - bulletPos).Unit
@@ -968,6 +1134,7 @@ local function isHeadingTowards(item, itemCFrame, targetPos)
     end
     return isHeading
 end
+
 RunService.Heartbeat:Connect(function()
     if not Config.AutoBlockEnabled then return end
     local character = player.Character
@@ -1048,4 +1215,42 @@ RunService.Heartbeat:Connect(function()
             end
         end
     end
+end)
+
+
+
+
+
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local emote = playerGui:WaitForChild("Emotes"):WaitForChild("Emote")
+local page1 = emote:WaitForChild("Page1")
+local page2 = emote:WaitForChild("Page2")
+local switch = emote:WaitForChild("Switch")
+local equipped = playerGui:WaitForChild("Menus"):WaitForChild("Group"):WaitForChild("Inventory"):WaitForChild("Items"):WaitForChild("Emotes"):WaitForChild("Equipped")
+
+local function show(gui)
+    if gui:IsA("GuiObject") then
+        gui.Visible = true
+        for _, child in ipairs(gui:GetChildren()) do
+            if child:IsA("GuiObject") then
+                child.Visible = true
+            end
+        end
+    end
+end
+
+local active = false
+page2.Visible = false
+switch.Visible = true --switch button idfk
+show(page1)
+show(equipped)
+
+switch.MouseButton1Click:Connect(function()
+    active = not active
+    page1.Visible = not active
+    page2.Visible = active
+    if active then show(page2) else show(page1) end
 end)
