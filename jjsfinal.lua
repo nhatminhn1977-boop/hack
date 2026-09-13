@@ -18,8 +18,7 @@ local Config = {
     LockTarget = false,
     ESPEnabled = true,
     M1Aim = true,
-    AutoBlockEnabled = true,
-    AutoBlockBreak = {Enabled = true, Distance = 9, ArcOffset = 4} -- Added from x1
+    AutoBlockEnabled = true
 }
 
 local skillKeys = {Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four, Enum.KeyCode.R}
@@ -36,16 +35,12 @@ local BLOCK_LINGER_TIME = 0.35
 local lastThreatTime = 0
 local lastPositions = {}
 
-local KnitServices, BlockServiceRE, ActivatedEvent, DeactivatedEvent, ItadoriActivatedEvent
+local KnitServices, BlockServiceRE, ActivatedEvent, DeactivatedEvent
 task.spawn(function()
     KnitServices = ReplicatedStorage:WaitForChild("Knit"):WaitForChild("Knit"):WaitForChild("Services")
     BlockServiceRE = KnitServices:WaitForChild("BlockService"):WaitForChild("RE")
     ActivatedEvent = BlockServiceRE:WaitForChild("Activated")
     DeactivatedEvent = BlockServiceRE:WaitForChild("Deactivated")
-    -- Load Itadori event for Auto Block Break (added from x1)
-    pcall(function()
-        ItadoriActivatedEvent = KnitServices:WaitForChild("ItadoriService"):WaitForChild("RE"):WaitForChild("Activated")
-    end)
 end)
 
 local gui = Instance.new("ScreenGui", player.PlayerGui)
@@ -145,7 +140,7 @@ local maxCorner = Instance.new("UICorner", maxBtn); maxCorner.CornerRadius = UDi
 
 -- [ UI Setup: Main Frame ]
 local mainFrame = Instance.new("Frame", gui)
-mainFrame.Size = UDim2.new(0, 440, 0, 650)
+mainFrame.Size = UDim2.new(0, 440, 0, 615) -- Giảm size so với bản cũ vì đã xóa 1 nút
 mainFrame.Position = UDim2.new(0.05, 0, 0.1, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 mainFrame.BorderSizePixel = 0
@@ -242,7 +237,7 @@ rightFrame.BackgroundTransparency = 1
 
 local function updateMainFrameSize()
     local w = isListOpen and 440 or 290
-    local h = isSkillsOpen and 670 or 495
+    local h = isSkillsOpen and 635 or 460 -- Adjusted do đã bỏ 1 button
     mainFrame.Size = UDim2.new(0, w, 0, h)
     rightFrame.Visible = isListOpen
 end
@@ -285,7 +280,7 @@ helpTitle.Font = Enum.Font.GothamBold
 local helpText = Instance.new("TextLabel", helpFrame)
 helpText.Size = UDim2.new(1, -20, 1, -40)
 helpText.Position = UDim2.new(0, 10, 0, 30)
-helpText.Text = "- UI minimize, toggle list, and hide skills integrated.\n- Auto Block Break added: Auto TP back & attacks blocking enemies\n- Key X: Reset Aim Target\n- KEY Q: Aim Root for 0.8s (Only when not holding A,S,D)\n- HOLD F: Hard lock character direction to target\n- ESP updates [ AIMED ] text for easy spotting\n- Report bugs to nhatminhn1977@gmail.com\n- Script by Nhat Minh 1602"
+helpText.Text = "- UI minimize, toggle list, and hide skills integrated.\n- Key X: Reset Aim Target\n- KEY Q: Dash aim (S,A: No Aim | D: Aim Root 0.9s if dist <= 9)\n- HOLD F: Hard lock character direction to target\n- ESP updates [ AIMED ] text for easy spotting\n- Report bugs to nhatminhn1977@gmail.com\n- Script by Nhat Minh 1602"
 helpText.TextColor3 = Color3.fromRGB(255, 255, 255)
 helpText.BackgroundTransparency = 1
 helpText.Font = Enum.Font.Gotham
@@ -430,16 +425,10 @@ createMainBtn(leftFrame, "Auto Block: ON", 270, function(btn)
     end
 end, Config.AutoBlockEnabled)
 
--- [ Added from x1 ] Auto Block Break Button
-createMainBtn(leftFrame, "Auto Block Break: ON", 305, function(btn)
-    Config.AutoBlockBreak.Enabled = not Config.AutoBlockBreak.Enabled
-    updateButtonVisual(btn, Config.AutoBlockBreak.Enabled, "Auto Block Break: ON", "Auto Block Break: OFF")
-end, Config.AutoBlockBreak.Enabled)
-
-
+-- Adjusted Y positions sau khi xóa Auto Block Break
 local toggleSkillsBtn = Instance.new("TextButton", leftFrame)
 toggleSkillsBtn.Size = UDim2.new(0.88, 0, 0, 30)
-toggleSkillsBtn.Position = UDim2.new(0.06, 0, 0, 345)
+toggleSkillsBtn.Position = UDim2.new(0.06, 0, 0, 310) 
 toggleSkillsBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
 toggleSkillsBtn.TextColor3 = Color3.fromRGB(255, 215, 0)
 toggleSkillsBtn.Text = "Hide Skill Settings"
@@ -449,12 +438,12 @@ local tsCorner = Instance.new("UICorner", toggleSkillsBtn); tsCorner.CornerRadiu
 
 local skillContainer = Instance.new("Frame", leftFrame)
 skillContainer.Size = UDim2.new(1, 0, 0, 170)
-skillContainer.Position = UDim2.new(0, 0, 0, 380)
+skillContainer.Position = UDim2.new(0, 0, 0, 345) 
 skillContainer.BackgroundTransparency = 1
 
 local bottomFrame = Instance.new("Frame", leftFrame)
 bottomFrame.Size = UDim2.new(1, 0, 0, 80)
-bottomFrame.Position = UDim2.new(0, 0, 0, 555)
+bottomFrame.Position = UDim2.new(0, 0, 0, 520) 
 bottomFrame.BackgroundTransparency = 1
 
 toggleSkillsBtn.MouseButton1Click:Connect(function()
@@ -462,10 +451,10 @@ toggleSkillsBtn.MouseButton1Click:Connect(function()
     skillContainer.Visible = isSkillsOpen
     if isSkillsOpen then
         toggleSkillsBtn.Text = "Hide Skill Settings"
-        bottomFrame.Position = UDim2.new(0, 0, 0, 555)
+        bottomFrame.Position = UDim2.new(0, 0, 0, 520)
     else
         toggleSkillsBtn.Text = "Show Skill Settings"
-        bottomFrame.Position = UDim2.new(0, 0, 0, 380)
+        bottomFrame.Position = UDim2.new(0, 0, 0, 345)
     end
     updateMainFrameSize()
 end)
@@ -806,59 +795,6 @@ clearTargetBtn.MouseButton1Click:Connect(function()
 end)
 task.delay(1, refreshPlayerList)
 
--- [ Added from x1 ] Helper Functions for Block Break
-local function playJJSAnimation(animId, priority)
-    local myChar = player.Character
-    local hum = myChar and myChar:FindFirstChild("Humanoid")
-    if not hum then return nil end
-    local animator = hum:FindFirstChild("Animator")
-    if not animator then return nil end
-    local anim = Instance.new("Animation")
-    anim.AnimationId = string.find(tostring(animId), "rbxassetid") and animId or "rbxassetid://" .. animId
-    local track = animator:LoadAnimation(anim)
-    track.Priority = priority or Enum.AnimationPriority.Action4
-    track:Play()
-    return track
-end
-
-local function lockFacingTarget(myChar, targetHrp, duration)
-    task.spawn(function()
-        local hum = myChar:FindFirstChildOfClass("Humanoid")
-        local myHrp = myChar:FindFirstChild("HumanoidRootPart")
-        if not hum or not myHrp then return end
-        hum.AutoRotate = false
-        local startTime = os.clock()
-        local connection
-        connection = RunService.RenderStepped:Connect(function()
-            if os.clock() - startTime >= duration or not targetHrp or not targetHrp.Parent or not myHrp or not myHrp.Parent then
-                connection:Disconnect()
-                if hum and hum.Parent then hum.AutoRotate = true end
-                return
-            end
-            local targetPos = Vector3.new(targetHrp.Position.X, myHrp.Position.Y, targetHrp.Position.Z)
-            myHrp.CFrame = CFrame.lookAt(myHrp.Position, targetPos)
-        end)
-    end)
-end
-
-local function tweenArcToBack(myHrp, targetHrp)
-    local startPos = myHrp.Position
-    local endCFrame = targetHrp.CFrame * CFrame.new(0, 0, Config.AutoBlockBreak.ArcOffset)
-    local endPos = endCFrame.Position
-    local sideOffset = targetHrp.CFrame.RightVector * 3
-    local controlPos = ((startPos + endPos) / 2) + sideOffset
-    local duration = 0.18
-    local startTime = os.clock()
-    while os.clock() - startTime < duration do
-        local t = (os.clock() - startTime) / duration
-        t = math.clamp(t, 0, 1)
-        local currentPos = (1 - t)^2 * startPos + 2 * (1 - t) * t * controlPos + t^2 * endPos
-        myHrp.CFrame = CFrame.lookAt(currentPos, Vector3.new(targetHrp.Position.X, currentPos.Y, targetHrp.Position.Z))
-        RunService.Heartbeat:Wait()
-    end
-    myHrp.CFrame = CFrame.lookAt(endPos, Vector3.new(targetHrp.Position.X, endPos.Y, targetHrp.Position.Z))
-end
-
 local function doAim(method, duration)
     isLocking = true
     currentMethod = method
@@ -876,60 +812,10 @@ local function doAim(method, duration)
 end
 
 -- [ Modified Input System ]
-local isExecutingBlockBreak = false
-
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe or UserInputService:GetFocusedTextBox() then return end
 
     if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-        -- 1. Check Auto Block Break First
-        if Config.AutoBlockBreak.Enabled and not isExecutingBlockBreak then
-            local myChar = player.Character
-            local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
-            local charactersFolder = workspace:FindFirstChild("Characters")
-            
-            if myHrp and charactersFolder then
-                local closestTarget = nil
-                local minDistance = math.huge
-                for _, char in ipairs(charactersFolder:GetChildren()) do
-                    if char:IsA("Model") and char ~= myChar then
-                        local root = char:FindFirstChild("HumanoidRootPart")
-                        local hum = char:FindFirstChildOfClass("Humanoid")
-                        if root and hum and hum.Health > 0 then
-                            local dist = (root.Position - myHrp.Position).Magnitude
-                            if dist < minDistance then
-                                minDistance = dist
-                                closestTarget = char
-                            end
-                        end
-                    end
-                end
-                
-                if closestTarget then
-                    local targetHrp = closestTarget:FindFirstChild("HumanoidRootPart")
-                    local infoFolder = closestTarget:FindFirstChild("Info")
-                    local isBlocking = infoFolder and infoFolder:FindFirstChild("Block") ~= nil
-                    local distance = (targetHrp.Position - myHrp.Position).Magnitude
-                    
-                    if isBlocking and distance <= Config.AutoBlockBreak.Distance then
-                        isExecutingBlockBreak = true
-                        lockFacingTarget(myChar, targetHrp, 1.0)
-                        playJJSAnimation("117223862448096", Enum.AnimationPriority.Action3)
-                        tweenArcToBack(myHrp, targetHrp)
-                        task.wait(0.03)
-                        playJJSAnimation("95295463826732", Enum.AnimationPriority.Action4)
-                        if ItadoriActivatedEvent then
-                            ItadoriActivatedEvent:FireServer(false, nil)
-                        end
-                        task.wait(0.5) 
-                        isExecutingBlockBreak = false
-                        return -- Ngăn M1 Aim chèn lên nếu đang Block Break
-                    end
-                end
-            end
-        end
-
-        -- 2. Regular M1 Aim
         if Config.M1Aim and target then
             doAim("Root", 0.3)
         end
@@ -949,9 +835,30 @@ UserInputService.InputBegan:Connect(function(input, gpe)
     
     if not target then return end
     
+    -- Xử lý Dash Aim (Phím Q)
     if input.KeyCode == Enum.KeyCode.Q and Config.Dash.Enabled then
-        local isMovingSide = UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.D)
-        if not isMovingSide then
+        local isHoldingS = UserInputService:IsKeyDown(Enum.KeyCode.S)
+        local isHoldingA = UserInputService:IsKeyDown(Enum.KeyCode.A)
+        local isHoldingD = UserInputService:IsKeyDown(Enum.KeyCode.D)
+        
+        if isHoldingS or isHoldingA then
+            -- Nếu đang giữ S hoặc A -> Không aim root
+            return
+        elseif isHoldingD then
+            -- Nếu đang giữ D -> Kiểm tra khoảng cách
+            local myChar = player.Character
+            local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
+            local targetHrp = target:FindFirstChild("HumanoidRootPart")
+            
+            if myHrp and targetHrp then
+                local dist = (myHrp.Position - targetHrp.Position).Magnitude
+                -- Bán kính <= 9 studs mới aim 0.9s
+                if dist <= 9 then
+                    doAim("Root", 0.9)
+                end
+            end
+        else
+            -- Các trường hợp khác (như giữ W hoặc không giữ phím nào)
             doAim("Root", 0.8)
         end
     elseif Config.Skills[input.KeyCode] and Config.Skills[input.KeyCode].Enabled then
@@ -1216,11 +1123,6 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
-
-
-
-
-
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
